@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#18181b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>АРМ Рентгенолога — AI Assistant</title>
+  <style>
+    :root {
+      --font-base: 15px;
+      --bg-main: #141416;
+      --bg-card: #202024;
+      --bg-card-hover: #2a2a30;
+      --bg-input: #18181b;
+      --text-main: #f4f4f5;
+      --text-muted: #94949e;
+      --border: #32323a;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --primary-rgb: 56, 189, 248;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --highlight: rgba(56, 189, 248, 0.28);
+      --highlight-border: #38bdf8;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+
+    [data-theme="clinical"] {
+      --bg-main: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-input: #f8fafc;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-rgb: 2, 132, 199;
+      --highlight: rgba(2, 132, 199, 0.22);
+      --highlight-border: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-size: var(--font-base);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      overflow-x: hidden;
+    }
+
+    header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-title {
+      font-size: 1.05em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      touch-action: manipulation;
+      transition: background 0.15s ease;
+    }
+    button:active:not(:disabled) { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-primary { background: var(--primary); color: #000; border-color: var(--primary); }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); color: #fff; }
+    .btn-danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
+
+    .btn-ask-questions {
+      border-color: var(--warning);
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+      width: 100%;
+    }
+
+    select, input[type="text"], input[type="password"], textarea {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 16px; /* Предотвращает зум на iOS */
+      outline: none;
+      width: 100%;
+    }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+
+    main {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .screen-tab {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+    .screen-tab.active { display: flex; }
+
+    /* ДЕСКТОП: Двухоконная сетка */
+    @media (min-width: 900px) {
+      body { padding-bottom: 0px; }
+      .desktop-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      .bottom-nav { display: none !important; }
+      .desktop-only-btn { display: inline-flex !important; }
+      .pc-tabs-bar {
+        display: flex;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+      }
+    }
+
+    /* МОБИЛЬНЫЙ РЕЖИМ */
+    @media (max-width: 899px) {
+      body { padding-bottom: calc(65px + var(--safe-bottom)); }
+      .desktop-only-btn { display: none !important; }
+      .pc-tabs-bar { display: none !important; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+
+    .dictation-panel {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sound-meter {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      max-width: 120px;
+      flex: 1;
+    }
+    .sound-meter-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-main);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .sound-meter-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--success);
+      border-radius: 99px;
+      transition: width 0.06s ease;
+    }
+
+    .progress-box {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82em;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .clarifications-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .clarifications-head {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+      font-weight: 600;
+      user-select: none;
+      cursor: pointer;
+    }
+    .clarifications-content {
+      padding: 10px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 0.9em;
+    }
+
+    .protocol-editor {
+      min-height: 380px;
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      outline: none;
+    }
+    .protocol-editor mark {
+      background-color: var(--highlight);
+      color: inherit;
+      padding: 2px 4px;
+      border-radius: 4px;
+      border-bottom: 2px solid var(--highlight-border);
+      font-weight: 600;
+    }
+    .hide-highlights mark {
+      background: transparent !important;
+      border-bottom: none !important;
+      padding: 0 !important;
+      font-weight: normal !important;
+    }
+
+    /* Мобильный Bottom-Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 90;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.75em;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      min-height: unset;
+      flex: 1;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item svg { width: 20px; height: 20px; }
+
+    /* Модалки */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(2px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 14px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+    }
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-foot {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .badge-pill {
+      font-size: 0.76em;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .badge-ok { background: rgba(34,197,94,0.2); color: var(--success); }
+    .badge-warn { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .loading-spin {
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body data-theme="graphite">
+
+  <header>
+    <div class="app-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+      АРМ Рентгенолога
+    </div>
+    <div class="header-actions">
+      <!-- Кнопка папки на ПК -->
+      <button onclick="app.connectFolder()" class="desktop-only-btn" id="btnFolder" style="display:none; padding:6px 10px;">
+        📁 Выбрать папку
+      </button>
+      <button onclick="app.openModal('modalSync')" style="padding:6px 10px;" title="Синхронизация шаблонов между устройствами">
+        🔄 Синхронизация
+      </button>
+      <button onclick="app.openModal('modalSettings')" style="padding:6px 10px;">
+        ⚙ Настройки
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ПК-переключатель вкладок -->
+    <div class="pc-tabs-bar">
+      <button class="btn-primary" onclick="app.switchTab('tabWork')" id="pcTabWork">Написание протокола</button>
+      <button onclick="app.switchTab('tabHistory')" id="pcTabHistory">История протоколов (<span id="pcHistCount">0</span>)</button>
+      <button onclick="app.switchTab('tabTemplates')" id="pcTabTemplates">Шаблоны и Правила</button>
+    </div>
+
+    <!-- Экран 1: Протокол -->
+    <section class="screen-tab active" id="tabWork">
+      <div class="desktop-grid">
+        
+        <!-- Левая колонка: Находки и управление -->
+        <div class="card">
+          <div style="display:flex; gap:8px;">
+            <select id="workTemplateSelect" style="flex:1;"></select>
+            <select id="workDetailLevel" style="width:130px;">
+              <option value="detailed">Развернуто</option>
+              <option value="brief">Кратко</option>
+            </select>
+          </div>
+
+          <!-- Диктовка -->
+          <div class="dictation-panel">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="btnVoiceStart" onclick="app.speech.start()" class="btn-primary" style="flex:1;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                Диктовать голос
+              </button>
+              <button id="btnVoiceStop" onclick="app.speech.stop()" style="display:none; flex:1;" class="btn-danger">
+                ■ Завершить запись
+              </button>
+
+              <div class="sound-meter" id="soundMeterBox">
+                <div class="sound-meter-bar"><div class="sound-meter-fill" id="soundMeterFill"></div></div>
+              </div>
+            </div>
+            <span id="speechIndicator" style="display:none; color:var(--primary); font-size:0.85em;">
+              <span class="loading-spin"></span> Микрофон активен, идет запись...
+            </span>
+          </div>
+
+          <!-- Прогресс аудио -->
+          <div class="progress-box" id="audioProgressBox">
+            <div class="progress-header">
+              <span id="audioProgressText"><span class="loading-spin"></span> Расшифровка через Gemini 3.5 Flash...</span>
+              <span id="audioProgressVal">0%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="audioProgressBar"></div></div>
+          </div>
+
+          <textarea id="rawInput" rows="5" placeholder="Диктуйте или вводите находки, размеры, изменения..."></textarea>
+
+          <button id="btnAskQuestions" onclick="app.askClarificationQuestions()" class="btn-ask-questions">
+            ❓ Задать вопросы по находкам
+          </button>
+
+          <!-- Прогресс генерации -->
+          <div class="progress-box" id="genProgressBox">
+            <div class="progress-header">
+              <span id="genProgressText"><span class="loading-spin"></span> Генерация протокола...</span>
+              <span id="genProgressVal">0%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="genProgressBar"></div></div>
+          </div>
+
+          <!-- Блок уточнений -->
+          <div class="clarifications-box">
+            <div class="clarifications-head" onclick="app.toggleClarifications()">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span>📋 Клинические уточнения</span>
+                <span id="clarificationsBadge" class="badge-pill badge-warn" style="display:none;">Есть вопросы</span>
+                <span id="clarificationsOkBadge" class="badge-pill badge-ok" style="display:none;">✓ Полные данные</span>
+              </div>
+              <span id="clarificationsArrow">▼</span>
+            </div>
+            <div class="clarifications-content" id="clarificationsBody">
+              <div id="clarificationsQuestionsBox" style="color:var(--text-muted);">
+                Нажмите «❓ Задать вопросы», чтобы проверить клинические данные.
+              </div>
+              <div id="clarificationsReplySection" style="display:none; flex-direction:column; gap:6px;">
+                <textarea id="clarificationsInput" rows="2" placeholder="Ответьте кратко..."></textarea>
+                <button class="btn-primary" onclick="app.applyClarificationsAndContinue()">✓ Применить ответы</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary" id="btnGenerate" onclick="app.generateProtocol()" style="padding:12px; font-size:1em;">
+            ⚡ Сформировать протокол
+          </button>
+        </div>
+
+        <!-- Правая колонка: Результат -->
+        <div class="card" id="outputCard">
+          <div class="card-header">
+            <span>Готовое заключение</span>
+            <div style="display:flex; gap:6px;">
+              <button onclick="app.toggleHighlightDiff()" style="padding:4px 8px; font-size:0.8em;">Маркер</button>
+              <button onclick="app.copyOutput()" id="btnCopy" class="btn-primary" style="padding:4px 10px;">Копировать</button>
+              <button onclick="app.clearOutput()" class="btn-danger" style="padding:4px 8px;">✕</button>
+            </div>
+          </div>
+          <div id="resultOutput" class="protocol-editor" contenteditable="true"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Экран 2: История -->
+    <section class="screen-tab" id="tabHistory">
+      <div class="card">
+        <div class="card-header">
+          <span>Архив протоколов (<span id="historyCount">0</span>)</span>
+        </div>
+        <input type="text" id="historyFilter" placeholder="Поиск по архиву..." oninput="app.renderHistory()">
+        <div id="historyListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </section>
+
+    <!-- Экран 3: Шаблоны и Правила -->
+    <section class="screen-tab" id="tabTemplates">
+      <div class="card">
+        <div class="card-header">
+          <span>Мои шаблоны</span>
+          <button class="btn-primary" onclick="app.openNewTemplateForm()" style="padding:4px 10px;">+ Шаблон</button>
+        </div>
+        <div id="templatesListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span>Мои правила стиля</span>
+          <button class="btn-primary" onclick="app.openNewPresetForm()" style="padding:4px 10px;">+ Правило</button>
+        </div>
+        <div id="presetsListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Мобильная нижняя панель -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="btnNavWork" onclick="app.switchTab('tabWork')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Протокол
+    </button>
+    <button class="nav-item" id="btnNavHistory" onclick="app.switchTab('tabHistory')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      История
+    </button>
+    <button class="nav-item" id="btnNavTemplates" onclick="app.switchTab('tabTemplates')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Шаблоны
+    </button>
+  </nav>
+
+  <!-- Модалка: Синхронизация между ПК и Телефоном -->
+  <div class="modal-overlay" id="modalSync">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>Синхронизация ПК ↔ Телефон</span>
+        <button onclick="app.closeModal('modalSync')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85em; color:var(--text-muted);">
+          Чтобы перенести ваши шаблоны и правила с компьютера на телефон:
+        </p>
+        <button class="btn-primary" onclick="app.exportSyncFile()" style="width:100%;">
+          📤 Экспортировать данные в файл (Сохранить на ПК)
+        </button>
+        <div style="border-top:1px dashed var(--border); margin:4px 0;"></div>
+        <label style="font-size:0.85em; font-weight:600;">Импорт файла на телефоне:</label>
+        <input type="file" id="importFileInput" accept=".json" onchange="app.importSyncFile(event)">
+      </div>
+      <div class="modal-foot">
+        <button onclick="app.closeModal('modalSync')">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка: Настройки -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>Настройки Gemini 3.5 Flash</span>
+        <button onclick="app.closeModal('modalSettings')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label style="font-size:0.85em; font-weight:600; display:block; margin-bottom:4px;">Gemini API Key:</label>
+          <input type="password" id="inputApiKey" placeholder="AIzaSy...">
+        </div>
+        <div>
+          <label style="font-size:0.85em; font-weight:600; display:block; margin-bottom:4px;">Цветовая тема:</label>
+          <select id="settingThemeSelect" onchange="app.setTheme(this.value)">
+            <option value="graphite">Графит (Темная)</option>
+            <option value="clinical">Клиническая (Светлая)</option>
+          </select>
+        </div>
+        <button onclick="app.testApiKey()" style="width:100%;">Проверить ключ</button>
+        <div id="apiKeyBadge"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-primary" onclick="app.saveSettings()" style="width:100%;">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка: Шаблон -->
+  <div class="modal-overlay" id="modalTemplateEdit">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span id="tplModalTitle">Шаблон</span>
+        <button onclick="app.closeModal('modalTemplateEdit')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTplId">
+        <input type="text" id="editTplName" placeholder="Название исследования">
+        <textarea id="editTplContent" rows="8" placeholder="Текст нормы..."></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-primary" onclick="app.saveTemplate()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка: Правило -->
+  <div class="modal-overlay" id="modalPresetEdit">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span>Правило стиля</span>
+        <button onclick="app.closeModal('modalPresetEdit')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="newPresetTitle" placeholder="Заголовок">
+        <textarea id="newPresetRule" rows="4" placeholder="Текст правила..."></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-primary" onclick="app.addPreset()">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const app = {
+      MODEL: 'gemini-3.5-flash',
+      dirHandle: null,
+      showHighlights: true,
+      audioProgressInterval: null,
+      progressInterval: null,
+
+      state: {
+        settings: { apiKey: '', theme: 'graphite' },
+        presets: [
+          { id: 'p1', title: 'Единицы измерения', rule: 'Все размеры очагов, лимфоузлов и органов указывать строго в миллиметрах (мм).' },
+          { id: 'p2', title: 'Стиль заключения', rule: 'В заключении выносить патологические изменения списком по степени клинической важности. Избегать формулировок "патологии не обнаружено", писать "Органических изменений не выявлено".' },
+          { id: 'p3', title: 'Только чистый текст', rule: 'Строго запрещено использовать синтаксис markdown: никаких звездочек **, заголовков #, нижних подчеркиваний. Использовать только заглавные буквы для разделов.' }
+        ],
+        templates: [
+          {
+            id: 't1',
+            name: 'КТ ОБП (Норма)',
+            content: 'ПЕЧЕНЬ: обычной формы и размеров, контуры четкие, ровные. Плотность паренхимы сохранена. Очаговых изменений не выявлено. Внутри- и внепеченочные желчные протоки не расширены.\nЖЕЛЧНЫЙ ПУЗЫРЬ: обычной формы и положения, стенка не утолщена, рентгеноконтрастных конкрементов не содержит.\nПОДЖЕЛУДОЧНАЯ ЖЕЛЕЗА: не увеличена, дольчатого строения, паренхима однородная, вирсунгов проток не расширен. Парапанкреатическая клетчатка не инфильтрирована.\nСЕЛЕЗЕНКА: не увеличена, паренхима гомогенная.\nНАДПОЧЕЧНИКИ: обычной формы и локализации, узловых утолщений не определяется.\nПОЧКИ: типичного положения и размеров. Паренхима сохранена, кортико-медуллярная дифференциация четкая. ЧЛС не расширена. Выделительная функция сохранена с обеих сторон.\nЛИМФОУЗЛЫ: забрюшинные, брыжеечные лимфатические узлы не увеличены.\nСВОБОДНАЯ ЖИДКОСТЬ: в брюшной полости и малом тазу не определяется.\nКОСТНЫЕ СТРУКТУРЫ: без деструктивных изменений.'
+          },
+          {
+            id: 't2',
+            name: 'КТ ОГК (Норма)',
+            content: 'ЛЕГКИЕ: очаговых и инфильтративных изменений в легочной паренхиме обоих легких не выявлено. Легочный рисунок не деформирован, не усилен.\nТРАХЕЯ И БРОНХИ: трахея и главные бронхи свободно проходимы, стенки не утолщены.\nСРЕДОСТЕНИЕ: средостение не смещено, дифференцировано. Лимфатические узлы средостения и корней легких не увеличены.\nПЛЕВРАЛЬНЫЕ ПОЛОСТИ: свободная жидкость и воздух в плевральных полостях не определяются. Плевральные листки тонкие.\nСЕРДЦЕ И КРУПНЫЕ СОСУДЫ: размеры сердца в пределах нормы. Диаметр восходящей аорты и легочного ствола не расширен.\nКОСТНЫЙ КАРКАС: ребра, грудина, позвонки без признаков деструктивных изменений.'
+          }
+        ],
+        history: []
+      },
+
+      init() {
+        this.loadStorage();
+        this.applySettings();
+        this.renderTemplatesSelect();
+        this.renderTemplatesList();
+        this.renderPresets();
+        this.renderHistory();
+      },
+
+      loadStorage() {
+        try {
+          const s = localStorage.getItem('rad_uni_settings');
+          if (s) this.state.settings = Object.assign(this.state.settings, JSON.parse(s));
+          const p = localStorage.getItem('rad_uni_presets');
+          if (p) this.state.presets = JSON.parse(p);
+          const t = localStorage.getItem('rad_uni_templates');
+          if (t) this.state.templates = JSON.parse(t);
+          const h = localStorage.getItem('rad_uni_history');
+          if (h) this.state.history = JSON.parse(h);
+        } catch(e) {}
+      },
+
+      saveStorage(k, data) {
+        localStorage.setItem(`rad_uni_${k}`, JSON.stringify(data));
+      },
+
+      applySettings() {
+        const theme = this.state.settings.theme || 'graphite';
+        document.body.setAttribute('data-theme', theme);
+        document.getElementById('settingThemeSelect').value = theme;
+        document.getElementById('inputApiKey').value = this.state.settings.apiKey || '';
+      },
+
+      setTheme(v) {
+        this.state.settings.theme = v;
+        document.body.setAttribute('data-theme', v);
+        this.saveStorage('settings', this.state.settings);
+      },
+
+      saveSettings() {
+        this.state.settings.apiKey = document.getElementById('inputApiKey').value.trim();
+        this.saveStorage('settings', this.state.settings);
+        this.closeModal('modalSettings');
+      },
+
+      async testApiKey() {
+        const key = document.getElementById('inputApiKey').value.trim();
+        const badge = document.getElementById('apiKeyBadge');
+        if (!key) { badge.innerHTML = '<span style="color:var(--danger)">Введите API ключ</span>'; return; }
+        badge.innerHTML = '<span class="loading-spin"></span> Проверка...';
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+          if (res.ok) badge.innerHTML = '<span style="color:var(--success)">✓ Ключ валиден (Gemini 3.5 Flash активен)</span>';
+          else badge.innerHTML = `<span style="color:var(--danger)">Ошибка ключа</span>`;
+        } catch(e) { badge.innerHTML = `<span style="color:var(--danger)">Ошибка сети: ${e.message}</span>`; }
+      },
+
+      // --- СИНХРОНИЗАЦИЯ ПК ↔ ТЕЛЕФОН ---
+      exportSyncFile() {
+        const data = {
+          templates: this.state.templates,
+          presets: this.state.presets,
+          exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rad_templates_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      importSyncFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.templates && Array.isArray(data.templates)) {
+              this.state.templates = data.templates;
+              this.saveStorage('templates', this.state.templates);
+            }
+            if (data.presets && Array.isArray(data.presets)) {
+              this.state.presets = data.presets;
+              this.saveStorage('presets', this.state.presets);
+            }
+            this.renderTemplatesSelect();
+            this.renderTemplatesList();
+            this.renderPresets();
+            alert('✓ Шаблоны и правила успешно импортированы!');
+            this.closeModal('modalSync');
+          } catch(err) {
+            alert('Ошибка чтения файла синхронизации: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      // --- ВЫБОР ПАПКИ НА ПК (File System API) ---
+      async connectFolder() {
+        if (!('showDirectoryPicker' in window)) return alert('Не поддерживается данным браузером');
+        try {
+          this.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          document.getElementById('btnFolder').textContent = `📁 ${this.dirHandle.name}`;
+          alert(`Папка «${this.dirHandle.name}» подключена.`);
+        } catch(e){}
+      },
+
+      // --- ВЫЗОВ GEMINI 3.5 FLASH ---
+      async callGemini({ systemPrompt, userPrompt, temperature = 0.12 }) {
+        const apiKey = this.state.settings.apiKey;
+        if (!apiKey) {
+          this.openModal('modalSettings');
+          throw new Error('Укажите Gemini API ключ!');
+        }
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: userPrompt }] }],
+            generationConfig: { temperature, maxOutputTokens: 8192 }
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error?.message || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      },
+
+      stripMarkdown(t) {
+        if (!t) return '';
+        return t.replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/__(.*?)__/g, '$1')
+                .replace(/_(.*?)_/g, '$1')
+                .replace(/^#+\s+/gm, '')
+                .replace(/`{1,3}[^`]*`{1,3}/g, '')
+                .replace(/^[\*\-]\s+/gm, '• ');
+      },
+
+      // --- ДИКТОВКА (GEMINI 3.5 FLASH AUDIO) ---
+      speech: {
+        mediaStream: null,
+        mediaRecorder: null,
+        audioChunks: [],
+        audioContext: null,
+        analyser: null,
+        animFrameId: null,
+        isRecording: false,
+
+        startSoundMeter() {
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.audioContext = new AudioCtx();
+            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 256;
+            source.connect(this.analyser);
+
+            const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            const fill = document.getElementById('soundMeterFill');
+            document.getElementById('soundMeterBox').style.display = 'inline-flex';
+
+            const update = () => {
+              if (!this.isRecording) return;
+              this.analyser.getByteFrequencyData(dataArray);
+              let sum = 0;
+              for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+              let avg = sum / dataArray.length;
+              fill.style.width = Math.min(100, Math.round((avg / 60) * 100)) + '%';
+              this.animFrameId = requestAnimationFrame(update);
+            };
+            update();
+          } catch(e) {}
+        },
+
+        stopSoundMeter() {
+          if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+          if (this.audioContext && this.audioContext.state !== 'closed') {
+            try { this.audioContext.close(); } catch(e){}
+          }
+          document.getElementById('soundMeterBox').style.display = 'none';
+          document.getElementById('soundMeterFill').style.width = '0%';
+        },
+
+        async start() {
+          this.audioChunks = [];
+          try {
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          } catch(e) {
+            alert('Разрешите доступ к микрофону в браузере.');
+            return;
+          }
+
+          this.isRecording = true;
+          try {
+            const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
+            this.mediaRecorder = mime ? new MediaRecorder(this.mediaStream, { mimeType: mime }) : new MediaRecorder(this.mediaStream);
+            this.mediaRecorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) this.audioChunks.push(e.data);
+            };
+            this.mediaRecorder.start(250);
+          } catch(e) {}
+
+          this.startSoundMeter();
+          document.getElementById('btnVoiceStart').style.display = 'none';
+          document.getElementById('btnVoiceStop').style.display = 'inline-flex';
+          document.getElementById('speechIndicator').style.display = 'inline-flex';
+        },
+
+        async stop() {
+          this.isRecording = false;
+          document.getElementById('btnVoiceStart').style.display = 'inline-flex';
+          document.getElementById('btnVoiceStop').style.display = 'none';
+          document.getElementById('speechIndicator').style.display = 'none';
+          this.stopSoundMeter();
+
+          if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            await new Promise(r => {
+              this.mediaRecorder.onstop = r;
+              try { this.mediaRecorder.stop(); } catch(e){ r(); }
+            });
+          }
+          if (this.mediaStream) this.mediaStream.getTracks().forEach(t => t.stop());
+
+          if (this.audioChunks.length === 0) return;
+
+          app.setAudioProgress(30, 'Сжатие звука...');
+          const apiKey = app.state.settings.apiKey;
+          if (!apiKey) {
+            app.setAudioProgress(null);
+            app.openModal('modalSettings');
+            return;
+          }
+
+          let p = 40;
+          app.audioProgressInterval = setInterval(() => {
+            if (p < 85) { p += 10; app.setAudioProgress(p, 'Расшифровка через Gemini 3.5 Flash...'); }
+          }, 180);
+
+          try {
+            const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+            const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+            const base64Data = await new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onloadend = () => res(reader.result.split(',')[1]);
+              reader.onerror = rej;
+              reader.readAsDataURL(audioBlob);
+            });
+
+            const cleanMime = mimeType.split(';')[0] || 'audio/webm';
+
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${app.MODEL}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [
+                    { text: "Вы — медицинский стенографист. Расшифруйте эту аудиозапись врача-рентгенолога ДОСЛОВНО на русском языке. Точно сохраняйте термины, структуры, размеры и единицы измерения (мм, см, HU). Выведите ТОЛЬКО текст надиктованной речи без вводных слов и кавычек." },
+                    { inlineData: { mimeType: cleanMime, data: base64Data } }
+                  ]
+                }],
+                generationConfig: { temperature: 0.1 }
+              })
+            });
+
+            if (app.audioProgressInterval) clearInterval(app.audioProgressInterval);
+            const data = await resp.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+            if (text.trim()) {
+              app.setAudioProgress(100, '✓ Готово!');
+              app.appendDictatedText(text);
+              setTimeout(() => app.setAudioProgress(null), 1200);
+            } else {
+              app.setAudioProgress(null);
+              alert('Не удалось разобрать речь.');
+            }
+          } catch(e) {
+            if (app.audioProgressInterval) clearInterval(app.audioProgressInterval);
+            app.setAudioProgress(null);
+            alert('Ошибка расшифровки: ' + e.message);
+          }
+        }
+      },
+
+      setAudioProgress(pct, txt) {
+        const b = document.getElementById('audioProgressBox');
+        if (pct === null) { b.style.display = 'none'; return; }
+        b.style.display = 'flex';
+        document.getElementById('audioProgressBar').style.width = `${pct}%`;
+        document.getElementById('audioProgressVal').textContent = `${pct}%`;
+        document.getElementById('audioProgressText').innerHTML = `<span class="loading-spin"></span> ${txt}`;
+      },
+
+      setGenProgress(pct, txt) {
+        const b = document.getElementById('genProgressBox');
+        if (pct === null) { b.style.display = 'none'; return; }
+        b.style.display = 'flex';
+        document.getElementById('genProgressBar').style.width = `${pct}%`;
+        document.getElementById('genProgressVal').textContent = `${pct}%`;
+        document.getElementById('genProgressText').innerHTML = `<span class="loading-spin"></span> ${txt}`;
+      },
+
+      appendDictatedText(txt) {
+        txt = (txt || '').trim();
+        if (!txt) return;
+        txt = txt.charAt(0).toUpperCase() + txt.slice(1);
+        const inp = document.getElementById('rawInput');
+        inp.value = inp.value.trim() ? `${inp.value.trim()}\n\n${txt}` : txt;
+        inp.scrollTop = inp.scrollHeight;
+      },
+
+      async askClarificationQuestions() {
+        const raw = document.getElementById('rawInput').value.trim();
+        const tpl = this.getSelectedTemplate();
+        if (!raw) return alert('Сначала надиктуйте или введите находки.');
+
+        const btn = document.getElementById('btnAskQuestions');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spin"></span> Анализ...';
+
+        const systemPrompt = `Вы — эксперт по лучевой диагностике.
+Проверьте находки рентгенолога:
+1. Указана ли сторона (латерализация)?
+2. Указан ли размер очага?
+3. Понятно ли контрастирование (фаза)?
+КРИТЕРИЙ:
+- Если данных достаточно, ответьте ТОЛЬКО: ВОПРОСОВ_НЕТ
+- Если есть важные клинические пробелы, выведите 2-3 коротких вопроса. Строго без markdown.`;
+
+        try {
+          const resp = await this.callGemini({ systemPrompt, userPrompt: `ИССЛЕДОВАНИЕ: ${tpl.name}\nНАХОДКИ: ${raw}`, temperature: 0.1 });
+          const cleaned = resp.trim();
+          if (cleaned.includes('ВОПРОСОВ_НЕТ') || cleaned.length < 5) {
+            document.getElementById('clarificationsBadge').style.display = 'none';
+            document.getElementById('clarificationsOkBadge').style.display = 'inline-flex';
+            document.getElementById('clarificationsQuestionsBox').innerHTML = '<span style="color:var(--success); font-weight:600;">✓ Данных достаточно, вопросов нет!</span>';
+            document.getElementById('clarificationsReplySection').style.display = 'none';
+          } else {
+            document.getElementById('clarificationsOkBadge').style.display = 'none';
+            document.getElementById('clarificationsBadge').style.display = 'inline-flex';
+            const lines = cleaned.split('\n').filter(l => l.trim().length > 3);
+            let h = '<ul style="margin-left:18px;">';
+            lines.forEach(l => h += `<li>${this.stripMarkdown(l.replace(/^\d+[\.\)]\s*/, ''))}</li>`);
+            h += '</ul>';
+            document.getElementById('clarificationsQuestionsBox').innerHTML = h;
+            document.getElementById('clarificationsReplySection').style.display = 'flex';
+          }
+          document.getElementById('clarificationsBody').style.display = 'flex';
+          document.getElementById('clarificationsArrow').textContent = '▲';
+        } catch(e) { alert(e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '❓ Задать вопросы по находкам'; }
+      },
+
+      applyClarificationsAndContinue() {
+        const r = document.getElementById('clarificationsInput').value.trim();
+        if (!r) return;
+        this.appendDictatedText(`Уточнения: ${r}`);
+        document.getElementById('clarificationsInput').value = '';
+        document.getElementById('clarificationsBadge').style.display = 'none';
+        document.getElementById('clarificationsOkBadge').style.display = 'inline-flex';
+        document.getElementById('clarificationsQuestionsBox').innerHTML = '<span style="color:var(--success);">✓ Ответы добавлены к находкам!</span>';
+        document.getElementById('clarificationsReplySection').style.display = 'none';
+      },
+
+      toggleClarifications() {
+        const b = document.getElementById('clarificationsBody');
+        const a = document.getElementById('clarificationsArrow');
+        if (b.style.display === 'none') { b.style.display = 'flex'; a.textContent = '▲'; }
+        else { b.style.display = 'none'; a.textContent = '▼'; }
+      },
+
+      async generateProtocol() {
+        const raw = document.getElementById('rawInput').value.trim();
+        const tpl = this.getSelectedTemplate();
+        const detail = document.getElementById('workDetailLevel').value;
+
+        const btn = document.getElementById('btnGenerate');
+        btn.disabled = true;
+        btn.textContent = 'Генерация...';
+
+        this.setGenProgress(20, 'Формирование структуры...');
+        const rules = this.state.presets.map((p, i) => `${i+1}. ${p.title}: ${p.rule}`).join('\n');
+        const detailText = detail === 'detailed' 
+          ? 'РЕЖИМ: МАКСИМАЛЬНО РАЗВЕРНУТЫЙ ЭКСПЕРТНЫЙ ПРОТОКОЛ. Подробно опишите все структуры нормы без пропусков, патологические очаги опишите с размерами в мм в 3 плоскостях.' 
+          : 'РЕЖИМ: КРАТКИЙ СФОКУСИРОВАННЫЙ ПРОТОКОЛ.';
+
+        const systemPrompt = `Вы — ведущий врач-рентгенолог (КТ/МРТ).
+Сформируйте медицинский протокол на основе шаблона нормы и находок врача.
+
+ПРАВИЛА ВРАЧА:
+${rules}
+
+${detailText}
+
+ТРЕБОВАНИЯ К ОФОРМЛЕНИЮ:
+1. СТРОГО БЕЗ СИНТАКСИСА MARKDOWN: никаких **, #, _, обратных кавычек. Разделы выделяйте ЗАГЛАВНЫМИ БУКВАМИ (например: ПЕЧЕНЬ:, ЗАКЛЮЧЕНИЕ:).
+2. ПОДСВЕТКА ИЗМЕНЕНИЙ: все формулировки, размеры и очаги, которые вы ВНЕСЛИ, ИЗМЕНИЛИ или ДОБАВИЛИ в шаблон нормы, обязательно оберните в теги <mark>...</mark>.
+Неизмененную норму шаблона оставляйте БЕЗ тегов.`;
+
+        let p = 30;
+        this.progressInterval = setInterval(() => {
+          if (p < 90) { p += 8; this.setGenProgress(p, 'Сборка заключения через Gemini 3.5 Flash...'); }
+        }, 200);
+
+        try {
+          const resp = await this.callGemini({ 
+            systemPrompt, 
+            userPrompt: `ШАБЛОН НОРМЫ:\n${tpl.content}\n\nНАХОДКИ ВРАЧА:\n${raw || 'Органических изменений не выявлено.'}\n\nСформируйте протокол:` 
+          });
+          if (this.progressInterval) clearInterval(this.progressInterval);
+
+          let sanitized = this.stripMarkdown(resp).replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+          const out = document.getElementById('resultOutput');
+          out.innerHTML = sanitized;
+
+          this.setGenProgress(100, '✓ Протокол сформирован!');
+
+          this.state.history.unshift({
+            id: 'h_' + Date.now(),
+            date: new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }),
+            tplName: tpl.name,
+            raw,
+            text: out.innerText
+          });
+          if (this.state.history.length > 100) this.state.history.pop();
+          this.saveStorage('history', this.state.history);
+          this.renderHistory();
+
+          if (window.innerWidth < 900) {
+            document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth' });
+          }
+          setTimeout(() => this.setGenProgress(null), 2000);
+        } catch(e) {
+          if (this.progressInterval) clearInterval(this.progressInterval);
+          this.setGenProgress(null);
+          alert('Ошибка генерации: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '⚡ Сформировать протокол';
+        }
+      },
+
+      toggleHighlightDiff() {
+        const out = document.getElementById('resultOutput');
+        this.showHighlights = !this.showHighlights;
+        if (this.showHighlights) out.classList.remove('hide-highlights');
+        else out.classList.add('hide-highlights');
+      },
+
+      copyOutput() {
+        const out = document.getElementById('resultOutput');
+        const t = out.innerText.trim();
+        if (!t) return;
+        navigator.clipboard.writeText(t).then(() => {
+          const b = document.getElementById('btnCopy');
+          const old = b.textContent;
+          b.textContent = '✓ Скопировано';
+          setTimeout(() => b.textContent = old, 1500);
+        });
+      },
+
+      clearOutput() {
+        if (confirm('Очистить заключение?')) document.getElementById('resultOutput').innerHTML = '';
+      },
+
+      getSelectedTemplate() {
+        const id = document.getElementById('workTemplateSelect').value;
+        return this.state.templates.find(t => t.id === id) || { name: 'Протокол', content: 'Норма' };
+      },
+
+      switchTab(tabId) {
+        document.querySelectorAll('.screen-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.pc-tabs-bar button').forEach(el => el.classList.remove('btn-primary'));
+
+        document.getElementById(tabId).classList.add('active');
+
+        // Мобильные кнопки
+        if (tabId === 'tabWork') document.getElementById('btnNavWork').classList.add('active');
+        if (tabId === 'tabHistory') document.getElementById('btnNavHistory').classList.add('active');
+        if (tabId === 'tabTemplates') document.getElementById('btnNavTemplates').classList.add('active');
+
+        // ПК кнопки
+        if (tabId === 'tabWork') document.getElementById('pcTabWork').classList.add('btn-primary');
+        if (tabId === 'tabHistory') document.getElementById('pcTabHistory').classList.add('btn-primary');
+        if (tabId === 'tabTemplates') document.getElementById('pcTabTemplates').classList.add('btn-primary');
+      },
+
+      renderTemplatesSelect() {
+        const sel = document.getElementById('workTemplateSelect');
+        sel.innerHTML = this.state.templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      },
+
+      renderTemplatesList() {
+        const c = document.getElementById('templatesListContainer');
+        c.innerHTML = this.state.templates.map(t => `
+          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:600; font-size:0.9em;">${t.name}</div>
+            <div style="display:flex; gap:6px;">
+              <button onclick="app.editTemplate('${t.id}')" style="padding:4px 8px; font-size:0.8em;">Изм.</button>
+              <button class="btn-danger" onclick="app.deleteTemplate('${t.id}')" style="padding:4px 8px; font-size:0.8em;">✕</button>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      openNewTemplateForm() {
+        document.getElementById('editTplId').value = '';
+        document.getElementById('editTplName').value = '';
+        document.getElementById('editTplContent').value = '';
+        document.getElementById('tplModalTitle').textContent = 'Новый шаблон';
+        this.openModal('modalTemplateEdit');
+      },
+
+      editTemplate(id) {
+        const t = this.state.templates.find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('editTplId').value = t.id;
+        document.getElementById('editTplName').value = t.name;
+        document.getElementById('editTplContent').value = t.content;
+        document.getElementById('tplModalTitle').textContent = 'Редактировать шаблон';
+        this.openModal('modalTemplateEdit');
+      },
+
+      saveTemplate() {
+        const id = document.getElementById('editTplId').value;
+        const name = document.getElementById('editTplName').value.trim();
+        const content = document.getElementById('editTplContent').value.trim();
+        if (!name || !content) return alert('Заполните название и текст!');
+
+        if (id) {
+          const t = this.state.templates.find(x => x.id === id);
+          if (t) { t.name = name; t.content = content; }
+        } else {
+          this.state.templates.push({ id: 't_' + Date.now(), name, content });
+        }
+        this.saveStorage('templates', this.state.templates);
+        this.renderTemplatesSelect();
+        this.renderTemplatesList();
+        this.closeModal('modalTemplateEdit');
+      },
+
+      deleteTemplate(id) {
+        if (!confirm('Удалить шаблон?')) return;
+        this.state.templates = this.state.templates.filter(x => x.id !== id);
+        this.saveStorage('templates', this.state.templates);
+        this.renderTemplatesSelect();
+        this.renderTemplatesList();
+      },
+
+      renderPresets() {
+        const c = document.getElementById('presetsListContainer');
+        c.innerHTML = this.state.presets.map(p => `
+          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div>
+              <div style="font-weight:600; font-size:0.88em;">${p.title}</div>
+              <div style="font-size:0.78em; color:var(--text-muted); margin-top:2px;">${p.rule}</div>
+            </div>
+            <button class="btn-danger" onclick="app.deletePreset('${p.id}')" style="padding:2px 6px;">✕</button>
+          </div>
+        `).join('');
+      },
+
+      openNewPresetForm() {
+        document.getElementById('newPresetTitle').value = '';
+        document.getElementById('newPresetRule').value = '';
+        this.openModal('modalPresetEdit');
+      },
+
+      addPreset() {
+        const title = document.getElementById('newPresetTitle').value.trim();
+        const rule = document.getElementById('newPresetRule').value.trim();
+        if (!title || !rule) return alert('Заполните название и текст');
+        this.state.presets.push({ id: 'p_' + Date.now(), title, rule });
+        this.saveStorage('presets', this.state.presets);
+        this.renderPresets();
+        this.closeModal('modalPresetEdit');
+      },
+
+      deletePreset(id) {
+        this.state.presets = this.state.presets.filter(x => x.id !== id);
+        this.saveStorage('presets', this.state.presets);
+        this.renderPresets();
+      },
+
+      renderHistory() {
+        const f = (document.getElementById('historyFilter')?.value || '').toLowerCase();
+        const c = document.getElementById('historyListContainer');
+        const count = this.state.history.length;
+        document.getElementById('historyCount').textContent = count;
+        document.getElementById('pcHistCount').textContent = count;
+
+        const list = this.state.history.filter(h => h.tplName.toLowerCase().includes(f) || h.text.toLowerCase().includes(f));
+        if (list.length === 0) {
+          c.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Архив пуст</div>';
+          return;
+        }
+
+        c.innerHTML = list.map(h => `
+          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--text-muted);">
+              <span>${h.date}</span>
+              <strong style="color:var(--primary);">${h.tplName}</strong>
+            </div>
+            <div style="font-size:0.82em; max-height:45px; overflow:hidden; text-overflow:ellipsis;">${h.text}</div>
+            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
+              <button onclick="app.loadFromHistory('${h.id}')" style="padding:4px 8px; font-size:0.75em;">Открыть</button>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      loadFromHistory(id) {
+        const item = this.state.history.find(h => h.id === id);
+        if (!item) return;
+        document.getElementById('rawInput').value = item.raw || '';
+        document.getElementById('resultOutput').innerText = item.text;
+        this.switchTab('tabWork');
+      },
+
+      openModal(id) { document.getElementById(id).classList.add('open'); },
+      closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>
