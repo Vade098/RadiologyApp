@@ -2,21 +2,18 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#18181b">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>АРМ Рентгенолога — AI Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>АРМ Рентгенолога — Gemini 3.5 Flash</title>
   <style>
     :root {
       --font-base: 15px;
-      --bg-main: #141416;
-      --bg-card: #202024;
-      --bg-card-hover: #2a2a30;
-      --bg-input: #18181b;
+      --bg-main: #18181b;
+      --bg-card: #27272a;
+      --bg-card-hover: #323236;
+      --bg-input: #1f1f23;
       --text-main: #f4f4f5;
-      --text-muted: #94949e;
-      --border: #32323a;
+      --text-muted: #a1a1aa;
+      --border: #3f3f46;
       --primary: #38bdf8;
       --primary-hover: #0284c7;
       --primary-rgb: 56, 189, 248;
@@ -25,16 +22,14 @@
       --warning: #f59e0b;
       --highlight: rgba(56, 189, 248, 0.28);
       --highlight-border: #38bdf8;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-top: env(safe-area-inset-top, 0px);
     }
 
     [data-theme="clinical"] {
-      --bg-main: #f1f5f9;
+      --bg-main: #f4f6f9;
       --bg-card: #ffffff;
       --bg-card-hover: #f8fafc;
-      --bg-input: #f8fafc;
-      --text-main: #0f172a;
+      --bg-input: #f1f5f9;
+      --text-main: #1e293b;
       --text-muted: #64748b;
       --border: #cbd5e1;
       --primary: #0284c7;
@@ -44,12 +39,27 @@
       --highlight-border: #0284c7;
     }
 
+    [data-theme="amoled"] {
+      --bg-main: #000000;
+      --bg-card: #121212;
+      --bg-card-hover: #1c1c1c;
+      --bg-input: #050505;
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --border: #242424;
+      --primary: #00e5ff;
+      --primary-hover: #00b4d8;
+      --primary-rgb: 0, 229, 255;
+      --highlight: rgba(0, 229, 255, 0.28);
+      --highlight-border: #00e5ff;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -59,8 +69,6 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-top: var(--safe-top);
-      overflow-x: hidden;
     }
 
     header {
@@ -70,158 +78,287 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 100;
     }
 
-    .app-title {
-      font-size: 1.05em;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--primary);
-    }
-
-    .header-actions {
+    .header-left, .header-right {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
 
+    .app-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .model-badge {
+      font-size: 0.75em;
+      background: rgba(var(--primary-rgb), 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .fs-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-input);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 0.85em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+    .status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
     button, .btn {
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid var(--border);
-      padding: 8px 14px;
-      border-radius: 8px;
+      padding: 7px 13px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.9em;
-      font-weight: 600;
+      font-size: 0.88em;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      min-height: 40px;
-      touch-action: manipulation;
-      transition: background 0.15s ease;
+      transition: all 0.15s ease;
+      user-select: none;
     }
-    button:active:not(:disabled) { transform: scale(0.98); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    .btn-primary { background: var(--primary); color: #000; border-color: var(--primary); }
-    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); color: #fff; }
-    .btn-danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
+    button:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--bg-card-hover);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      font-weight: 600;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      color: #fff;
+    }
+
+    .btn-danger {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
 
     .btn-ask-questions {
+      padding: 9px 14px;
+      font-weight: 600;
       border-color: var(--warning);
       color: #fbbf24;
-      background: rgba(245, 158, 11, 0.1);
+      background: rgba(245, 158, 11, 0.08);
       width: 100%;
+    }
+    .btn-ask-questions:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.18);
     }
 
     select, input[type="text"], input[type="password"], textarea {
       background: var(--bg-input);
       color: var(--text-main);
       border: 1px solid var(--border);
-      padding: 9px 12px;
-      border-radius: 8px;
-      font-size: 16px; /* Предотвращает зум на iOS */
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: var(--font-base);
       outline: none;
       width: 100%;
     }
-    select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+    select:focus, input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-main);
+      padding: 8px 16px 0;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-tab {
+      padding: 8px 16px;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.9em;
+    }
+    .nav-tab.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      border-color: var(--border);
+      font-weight: 700;
+    }
 
     main {
       flex: 1;
-      padding: 14px;
+      padding: 14px 16px 80px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      width: 100%;
-      max-width: 1300px;
-      margin: 0 auto;
     }
 
-    .screen-tab {
+    .tab-content {
       display: none;
-      flex-direction: column;
-      gap: 14px;
       flex: 1;
     }
-    .screen-tab.active { display: flex; }
-
-    /* ДЕСКТОП: Двухоконная сетка */
-    @media (min-width: 900px) {
-      body { padding-bottom: 0px; }
-      .desktop-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        align-items: start;
-      }
-      .bottom-nav { display: none !important; }
-      .desktop-only-btn { display: inline-flex !important; }
-      .pc-tabs-bar {
-        display: flex;
-        gap: 8px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 8px;
-        margin-bottom: 8px;
-      }
-    }
-
-    /* МОБИЛЬНЫЙ РЕЖИМ */
-    @media (max-width: 899px) {
-      body { padding-bottom: calc(65px + var(--safe-bottom)); }
-      .desktop-only-btn { display: none !important; }
-      .pc-tabs-bar { display: none !important; }
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
+    .tab-content.active {
       display: flex;
       flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Сетка рабочей зоны: ПК vs Мобильная */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+    }
+
+    body.view-mobile .workspace-grid,
+    @media (max-width: 900px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+      .pc-only {
+        display: none !important;
+      }
+      .mobile-tab-switch {
+        display: flex !important;
+      }
+    }
+
+    @media (min-width: 901px) {
+      body:not(.view-mobile) .mobile-tab-switch {
+        display: none !important;
+      }
+    }
+
+    /* Мобильный переключатель между Вводом и Протоколом */
+    .mobile-tab-switch {
+      display: none;
+      gap: 6px;
+      background: var(--bg-input);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .mobile-tab-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 0.9em;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+    .mobile-tab-btn.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
       gap: 10px;
     }
 
-    .card-header {
+    .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      font-size: 0.95em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    .dictation-panel {
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
+    /* Диктовка */
+    .dictation-controls {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      background: var(--bg-input);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .dictation-buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .mic-pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.3; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.2); }
     }
 
-    .sound-meter {
+    .sound-meter-container {
       display: none;
       align-items: center;
       gap: 6px;
       background: var(--bg-card);
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: 4px;
       border: 1px solid var(--border);
-      max-width: 120px;
-      flex: 1;
     }
     .sound-meter-bar {
-      flex: 1;
-      height: 6px;
+      width: 70px;
+      height: 8px;
       background: var(--bg-main);
       border-radius: 99px;
       overflow: hidden;
@@ -234,74 +371,139 @@
       transition: width 0.06s ease;
     }
 
+    /* Прогресс-бары */
     .progress-box {
       display: none;
       flex-direction: column;
       gap: 6px;
       background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 6px;
+      padding: 10px 12px;
     }
     .progress-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.82em;
+      align-items: center;
+      font-size: 0.86em;
+    }
+    .progress-status-text {
       color: var(--primary);
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .progress-track {
+    .progress-bar-track {
       width: 100%;
-      height: 6px;
+      height: 8px;
       background: var(--bg-card);
       border-radius: 999px;
+      border: 1px solid var(--border);
       overflow: hidden;
     }
-    .progress-fill {
+    .progress-bar-fill {
       width: 0%;
       height: 100%;
-      background: var(--primary);
+      background: linear-gradient(90deg, var(--primary), var(--primary-hover));
       border-radius: 999px;
       transition: width 0.25s ease;
     }
 
-    .clarifications-box {
+    /* Уточнения */
+    .clarifications-card {
       background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
     }
-    .clarifications-head {
+    .clarifications-header {
       padding: 10px 12px;
+      cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9em;
-      font-weight: 600;
+      background: var(--bg-card);
       user-select: none;
-      cursor: pointer;
     }
-    .clarifications-content {
-      padding: 10px 12px;
-      display: none;
+    .clarifications-body {
+      padding: 12px;
+      display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       border-top: 1px solid var(--border);
-      font-size: 0.9em;
+    }
+    .red-dot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      font-size: 0.78em;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      font-weight: 700;
+    }
+    .green-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+      font-size: 0.78em;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      font-weight: 700;
     }
 
+    /* Клинический ассистент */
+    .clinical-assistant-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .clinical-assistant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.9em;
+    }
+    .clinical-hints-body {
+      font-size: 0.88em;
+      line-height: 1.5;
+      color: var(--text-main);
+      max-height: 180px;
+      overflow-y: auto;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border);
+      white-space: pre-wrap;
+    }
+
+    /* Редактор протокола */
     .protocol-editor {
+      flex: 1;
       min-height: 380px;
       background: var(--bg-input);
       color: var(--text-main);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 12px;
-      font-size: 15px;
+      font-size: var(--font-base);
       line-height: 1.6;
       white-space: pre-wrap;
       overflow-y: auto;
       outline: none;
+    }
+    .protocol-editor:focus {
+      border-color: var(--primary);
     }
     .protocol-editor mark {
       background-color: var(--highlight);
@@ -314,384 +516,477 @@
     .hide-highlights mark {
       background: transparent !important;
       border-bottom: none !important;
-      padding: 0 !important;
       font-weight: normal !important;
     }
 
-    /* Мобильный Bottom-Bar */
-    .bottom-nav {
+    /* Мобильная нижняя панель навигации */
+    .mobile-bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: calc(56px + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
       background: var(--bg-card);
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
-      align-items: center;
+      padding: 8px 10px;
       z-index: 90;
     }
-    .nav-item {
+    .bottom-nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 3px;
       color: var(--text-muted);
       font-size: 0.75em;
-      font-weight: 600;
       background: transparent;
       border: none;
-      min-height: unset;
-      flex: 1;
+      padding: 4px 8px;
     }
-    .nav-item.active { color: var(--primary); }
-    .nav-item svg { width: 20px; height: 20px; }
+    .bottom-nav-item.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
 
-    /* Модалки */
+    /* Модальные окна */
     .modal-overlay {
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
       backdrop-filter: blur(2px);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      padding: 14px;
+      padding: 12px;
     }
-    .modal-overlay.open { display: flex; }
+    .modal-overlay.open {
+      display: flex;
+    }
     .modal-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 10px;
       width: 100%;
-      max-width: 580px;
-      max-height: 85vh;
+      max-width: 640px;
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-    .modal-head {
-      padding: 14px;
+    .modal-header {
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 1.05em;
       font-weight: 700;
     }
     .modal-body {
-      padding: 14px;
+      padding: 14px 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
-    .modal-foot {
-      padding: 12px 14px;
+    .modal-footer {
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: flex-end;
       gap: 8px;
     }
 
-    .badge-pill {
-      font-size: 0.76em;
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-weight: bold;
+    .item-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .badge-ok { background: rgba(34,197,94,0.2); color: var(--success); }
-    .badge-warn { background: rgba(245,158,11,0.2); color: var(--warning); }
-    .loading-spin {
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .history-table th, .history-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88em;
+    }
+
+    .loading-spinner {
       border: 2px solid rgba(255,255,255,0.2);
       border-top-color: var(--primary);
       border-radius: 50%;
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       animation: spin 0.8s linear infinite;
       display: inline-block;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-<body data-theme="graphite">
+<body>
 
   <header>
-    <div class="app-title">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
-      АРМ Рентгенолога
+    <div class="header-left">
+      <div class="app-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        АРМ
+      </div>
+      <span class="model-badge">Gemini 3.5 Flash</span>
+
+      <div class="fs-status pc-only" id="fsStatusBadge">
+        <span class="status-dot" id="fsDot"></span>
+        <span id="fsStatusText">Папка ПК: Выкл</span>
+      </div>
+      <button onclick="app.connectDirectory()" id="btnConnectFolder" class="pc-only" style="padding:4px 8px; font-size:0.8em;">
+        Выбрать папку
+      </button>
     </div>
-    <div class="header-actions">
-      <!-- Кнопка папки на ПК -->
-      <button onclick="app.connectFolder()" class="desktop-only-btn" id="btnFolder" style="display:none; padding:6px 10px;">
-        📁 Выбрать папку
+
+    <div class="header-right">
+      <!-- Переключатель режима экрана ПК / Мобильный -->
+      <button onclick="app.toggleDeviceMode()" id="btnDeviceMode" title="Переключить вид интерфейса">
+        📱 Мобильный вид
       </button>
-      <button onclick="app.openModal('modalSync')" style="padding:6px 10px;" title="Синхронизация шаблонов между устройствами">
-        🔄 Синхронизация
-      </button>
-      <button onclick="app.openModal('modalSettings')" style="padding:6px 10px;">
-        ⚙ Настройки
-      </button>
+      <button onclick="app.openModal('modalPresets')">Правила</button>
+      <button onclick="app.openModal('modalTemplates')">Шаблоны</button>
+      <button onclick="app.openModal('modalSettings')">⚙ API</button>
     </div>
   </header>
 
-  <main>
-    <!-- ПК-переключатель вкладок -->
-    <div class="pc-tabs-bar">
-      <button class="btn-primary" onclick="app.switchTab('tabWork')" id="pcTabWork">Написание протокола</button>
-      <button onclick="app.switchTab('tabHistory')" id="pcTabHistory">История протоколов (<span id="pcHistCount">0</span>)</button>
-      <button onclick="app.switchTab('tabTemplates')" id="pcTabTemplates">Шаблоны и Правила</button>
-    </div>
+  <!-- Вкладки на ПК -->
+  <nav class="nav-tabs pc-only">
+    <div class="nav-tab active" id="tabNavWork" onclick="app.switchTab('work')">Протоколирование</div>
+    <div class="nav-tab" id="tabNavHistory" onclick="app.switchTab('history')">Архив (<span id="historyCount">0</span>)</div>
+  </nav>
 
-    <!-- Экран 1: Протокол -->
-    <section class="screen-tab active" id="tabWork">
-      <div class="desktop-grid">
+  <main>
+    <!-- Вкладка 1: Работа -->
+    <div class="tab-content active" id="tabContentWork">
+      
+      <!-- Мобильный переключатель блоков Находки / Заключение -->
+      <div class="mobile-tab-switch">
+        <button class="mobile-tab-btn active" id="mBtnInput" onclick="app.switchMobilePanel('input')">1. Находки и голос</button>
+        <button class="mobile-tab-btn" id="mBtnOutput" onclick="app.switchMobilePanel('output')">2. Заключение</button>
+      </div>
+
+      <div class="workspace-grid">
         
-        <!-- Левая колонка: Находки и управление -->
-        <div class="card">
-          <div style="display:flex; gap:8px;">
-            <select id="workTemplateSelect" style="flex:1;"></select>
-            <select id="workDetailLevel" style="width:130px;">
-              <option value="detailed">Развернуто</option>
-              <option value="brief">Кратко</option>
-            </select>
+        <!-- Панель А: Сырые данные и диктовка -->
+        <div class="panel" id="panelInput">
+          <div class="panel-header">
+            <span>Находки исследования</span>
+            <div style="display:flex; gap:6px; flex:1; max-width:320px; justify-content:flex-end;">
+              <select id="workTemplateSelect" style="font-size:0.85em;"></select>
+              <select id="workDetailLevel" style="font-size:0.85em; max-width:130px;">
+                <option value="detailed">Развернуто</option>
+                <option value="brief">Кратко</option>
+              </select>
+            </div>
           </div>
 
-          <!-- Диктовка -->
-          <div class="dictation-panel">
-            <div style="display:flex; align-items:center; gap:8px;">
+          <!-- Голосовая диктовка -->
+          <div class="dictation-controls">
+            <div class="dictation-buttons-row">
               <button id="btnVoiceStart" onclick="app.speech.start()" class="btn-primary" style="flex:1;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                 Диктовать голос
               </button>
               <button id="btnVoiceStop" onclick="app.speech.stop()" style="display:none; flex:1;" class="btn-danger">
                 ■ Завершить запись
               </button>
 
-              <div class="sound-meter" id="soundMeterBox">
-                <div class="sound-meter-bar"><div class="sound-meter-fill" id="soundMeterFill"></div></div>
+              <span id="speechIndicator" style="display:none; align-items:center; gap:5px; font-size:0.85em; color:var(--primary);">
+                <span class="mic-pulse"></span> Идет запись...
+              </span>
+
+              <div class="sound-meter-container" id="soundMeterBox">
+                <span style="font-size:0.75em; color:var(--text-muted);">Сигнал:</span>
+                <div class="sound-meter-bar">
+                  <div class="sound-meter-fill" id="soundMeterFill"></div>
+                </div>
               </div>
             </div>
-            <span id="speechIndicator" style="display:none; color:var(--primary); font-size:0.85em;">
-              <span class="loading-spin"></span> Микрофон активен, идет запись...
-            </span>
           </div>
 
-          <!-- Прогресс аудио -->
+          <!-- Прогресс-бар расшифровки аудио -->
           <div class="progress-box" id="audioProgressBox">
             <div class="progress-header">
-              <span id="audioProgressText"><span class="loading-spin"></span> Расшифровка через Gemini 3.5 Flash...</span>
-              <span id="audioProgressVal">0%</span>
+              <span class="progress-status-text" id="audioProgressText">
+                <span class="loading-spinner"></span>
+                <span>Расшифровка через Gemini 3.5 Flash...</span>
+              </span>
+              <span id="audioProgressVal" style="font-weight:700;">0%</span>
             </div>
-            <div class="progress-track"><div class="progress-fill" id="audioProgressBar"></div></div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="audioProgressBar"></div>
+            </div>
           </div>
 
-          <textarea id="rawInput" rows="5" placeholder="Диктуйте или вводите находки, размеры, изменения..."></textarea>
+          <textarea id="rawInput" rows="5" placeholder="Диктуйте или вводите зоны изменений, размеры, плотность... Расшифрованный голос добавится новым абзацем с заглавной буквы."></textarea>
 
+          <!-- Кнопка проверки неясностей -->
           <button id="btnAskQuestions" onclick="app.askClarificationQuestions()" class="btn-ask-questions">
-            ❓ Задать вопросы по находкам
+            ❓ Задать вопросы по находкам (Проверить неясности)
           </button>
 
-          <!-- Прогресс генерации -->
+          <!-- Прогресс-бар генерации протокола -->
           <div class="progress-box" id="genProgressBox">
             <div class="progress-header">
-              <span id="genProgressText"><span class="loading-spin"></span> Генерация протокола...</span>
-              <span id="genProgressVal">0%</span>
+              <span class="progress-status-text" id="genProgressText">
+                <span class="loading-spinner"></span>
+                <span>Формирование протокола...</span>
+              </span>
+              <span id="genProgressVal" style="font-weight:700;">0%</span>
             </div>
-            <div class="progress-track"><div class="progress-fill" id="genProgressBar"></div></div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="genProgressBar"></div>
+            </div>
           </div>
 
-          <!-- Блок уточнений -->
-          <div class="clarifications-box">
-            <div class="clarifications-head" onclick="app.toggleClarifications()">
+          <!-- Вкладка уточнений от ИИ -->
+          <div class="clarifications-card" id="clarificationsCard">
+            <div class="clarifications-header" onclick="app.toggleClarifications()">
               <div style="display:flex; align-items:center; gap:6px;">
-                <span>📋 Клинические уточнения</span>
-                <span id="clarificationsBadge" class="badge-pill badge-warn" style="display:none;">Есть вопросы</span>
-                <span id="clarificationsOkBadge" class="badge-pill badge-ok" style="display:none;">✓ Полные данные</span>
+                <span style="font-weight:600; font-size:0.9em;">📋 Уточнения от ИИ</span>
+                <span id="clarificationsBadge" class="red-dot-badge" style="display:none;">Есть вопросы</span>
+                <span id="clarificationsOkBadge" class="green-badge" style="display:none;">✓ Вопросов нет</span>
               </div>
               <span id="clarificationsArrow">▼</span>
             </div>
-            <div class="clarifications-content" id="clarificationsBody">
-              <div id="clarificationsQuestionsBox" style="color:var(--text-muted);">
-                Нажмите «❓ Задать вопросы», чтобы проверить клинические данные.
+            <div class="clarifications-body" id="clarificationsBody" style="display:none;">
+              <div id="clarificationsQuestionsBox" style="font-size:0.88em; line-height:1.45;">
+                <span style="color:var(--text-muted);">Нажмите «❓ Задать вопросы по находкам» для проверки полноты данных.</span>
               </div>
               <div id="clarificationsReplySection" style="display:none; flex-direction:column; gap:6px;">
-                <textarea id="clarificationsInput" rows="2" placeholder="Ответьте кратко..."></textarea>
-                <button class="btn-primary" onclick="app.applyClarificationsAndContinue()">✓ Применить ответы</button>
+                <textarea id="clarificationsInput" rows="2" placeholder="Краткий ответ (например: Справа, без контраста)..."></textarea>
+                <button class="btn-primary" onclick="app.applyClarificationsAndContinue()" style="padding:6px 12px; align-self:flex-start;">
+                  ✓ Применить ответ
+                </button>
               </div>
             </div>
           </div>
 
+          <!-- Клинический ассистент -->
+          <div class="clinical-assistant-card">
+            <div class="clinical-assistant-header">
+              <span>💡 Шкалы, Диф. диагноз</span>
+              <button class="btn" style="padding:3px 8px; font-size:0.8em;" onclick="app.generateClinicalHints()" id="btnHintsAction">
+                ⚡ Анализ
+              </button>
+            </div>
+            <div class="clinical-hints-body" id="clinicalHintsContainer">
+              <span style="color:var(--text-muted); font-size:0.85em;">
+                Надиктуйте находки и нажмите кнопку для вывода релевантных классификаций (Bosniak, PI-RADS, ASPECTS) и зон внимания.
+              </span>
+            </div>
+          </div>
+
+          <!-- Главная кнопка генерации -->
           <button class="btn-primary" id="btnGenerate" onclick="app.generateProtocol()" style="padding:12px; font-size:1em;">
-            ⚡ Сформировать протокол
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><line x1="14" x2="17" y1="7" y2="10"/></svg>
+            <span id="btnGenerateText">Сформировать протокол</span>
           </button>
         </div>
 
-        <!-- Правая колонка: Результат -->
-        <div class="card" id="outputCard">
-          <div class="card-header">
-            <span>Готовое заключение</span>
+        <!-- Панель Б: Готовое заключение -->
+        <div class="panel" id="panelOutput">
+          <div class="panel-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>Готовое заключение</span>
+              <span id="diffIndicator" style="display:none; font-size:0.75em; background:var(--highlight); color:var(--primary); padding:2px 6px; border-radius:4px;">Правки подсвечены</span>
+            </div>
             <div style="display:flex; gap:6px;">
-              <button onclick="app.toggleHighlightDiff()" style="padding:4px 8px; font-size:0.8em;">Маркер</button>
-              <button onclick="app.copyOutput()" id="btnCopy" class="btn-primary" style="padding:4px 10px;">Копировать</button>
-              <button onclick="app.clearOutput()" class="btn-danger" style="padding:4px 8px;">✕</button>
+              <button onclick="app.toggleHighlightDiff()" id="btnToggleHighlight" style="font-size:0.8em;">Подсветка</button>
+              <button onclick="app.copyOutput()" id="btnCopy" class="btn-primary" style="font-size:0.8em;">Копировать чистый текст</button>
+              <button onclick="app.clearOutput()" class="btn-danger" style="font-size:0.8em;">Очистить</button>
             </div>
           </div>
+
           <div id="resultOutput" class="protocol-editor" contenteditable="true"></div>
         </div>
 
       </div>
-    </section>
+    </div>
 
-    <!-- Экран 2: История -->
-    <section class="screen-tab" id="tabHistory">
-      <div class="card">
-        <div class="card-header">
-          <span>Архив протоколов (<span id="historyCount">0</span>)</span>
+    <!-- Вкладка 2: Архив -->
+    <div class="tab-content" id="tabContentHistory">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Архив исследований</span>
+          <input type="text" id="historyFilter" placeholder="Поиск по тексту..." oninput="app.renderHistory()" style="max-width:240px; font-size:0.85em;">
         </div>
-        <input type="text" id="historyFilter" placeholder="Поиск по архиву..." oninput="app.renderHistory()">
-        <div id="historyListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-    </section>
-
-    <!-- Экран 3: Шаблоны и Правила -->
-    <section class="screen-tab" id="tabTemplates">
-      <div class="card">
-        <div class="card-header">
-          <span>Мои шаблоны</span>
-          <button class="btn-primary" onclick="app.openNewTemplateForm()" style="padding:4px 10px;">+ Шаблон</button>
+        <div style="overflow-x:auto;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th style="width:130px;">Дата</th>
+                <th>Шаблон</th>
+                <th>Протокол</th>
+                <th style="width:100px; text-align:right;">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
         </div>
-        <div id="templatesListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <span>Мои правила стиля</span>
-          <button class="btn-primary" onclick="app.openNewPresetForm()" style="padding:4px 10px;">+ Правило</button>
-        </div>
-        <div id="presetsListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Мобильная нижняя панель -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" id="btnNavWork" onclick="app.switchTab('tabWork')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Протокол
-    </button>
-    <button class="nav-item" id="btnNavHistory" onclick="app.switchTab('tabHistory')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      История
-    </button>
-    <button class="nav-item" id="btnNavTemplates" onclick="app.switchTab('tabTemplates')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-      Шаблоны
-    </button>
-  </nav>
-
-  <!-- Модалка: Синхронизация между ПК и Телефоном -->
-  <div class="modal-overlay" id="modalSync">
-    <div class="modal-card">
-      <div class="modal-head">
-        <span>Синхронизация ПК ↔ Телефон</span>
-        <button onclick="app.closeModal('modalSync')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:0.85em; color:var(--text-muted);">
-          Чтобы перенести ваши шаблоны и правила с компьютера на телефон:
-        </p>
-        <button class="btn-primary" onclick="app.exportSyncFile()" style="width:100%;">
-          📤 Экспортировать данные в файл (Сохранить на ПК)
-        </button>
-        <div style="border-top:1px dashed var(--border); margin:4px 0;"></div>
-        <label style="font-size:0.85em; font-weight:600;">Импорт файла на телефоне:</label>
-        <input type="file" id="importFileInput" accept=".json" onchange="app.importSyncFile(event)">
-      </div>
-      <div class="modal-foot">
-        <button onclick="app.closeModal('modalSync')">Закрыть</button>
       </div>
     </div>
+  </main>
+
+  <!-- Нижняя панель навигации для смартфонов -->
+  <div class="mobile-bottom-nav">
+    <button class="bottom-nav-item active" id="bNavWork" onclick="app.switchTab('work')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Протокол
+    </button>
+    <button class="bottom-nav-item" id="bNavTemplates" onclick="app.openModal('modalTemplates')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      Шаблоны
+    </button>
+    <button class="bottom-nav-item" id="bNavHistory" onclick="app.switchTab('history')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Архив
+    </button>
+    <button class="bottom-nav-item" id="bNavSettings" onclick="app.openModal('modalSettings')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Настройки
+    </button>
   </div>
 
-  <!-- Модалка: Настройки -->
+  <!-- Модальное окно: Настройки API Gemini -->
   <div class="modal-overlay" id="modalSettings">
     <div class="modal-card">
-      <div class="modal-head">
+      <div class="modal-header">
         <span>Настройки Gemini 3.5 Flash</span>
         <button onclick="app.closeModal('modalSettings')">✕</button>
       </div>
       <div class="modal-body">
         <div>
-          <label style="font-size:0.85em; font-weight:600; display:block; margin-bottom:4px;">Gemini API Key:</label>
-          <input type="password" id="inputApiKey" placeholder="AIzaSy...">
+          <label style="font-weight:600; display:block; margin-bottom:6px;">Google Gemini API Key:</label>
+          <div style="display:flex; gap:6px;">
+            <input type="password" id="inputApiKey" placeholder="AIzaSy..." style="flex:1;">
+            <button onclick="app.toggleApiKeyVisibility()">👁</button>
+          </div>
+          <small style="color:var(--text-muted); display:block; margin-top:4px;">
+            Бесплатный ключ из Google AI Studio. Все запросы и диктовка идут строго через модель <strong>gemini-3.5-flash</strong>.
+          </small>
         </div>
+
         <div>
-          <label style="font-size:0.85em; font-weight:600; display:block; margin-bottom:4px;">Цветовая тема:</label>
+          <label style="font-weight:600; display:block; margin-bottom:6px;">Цветовая тема:</label>
           <select id="settingThemeSelect" onchange="app.setTheme(this.value)">
             <option value="graphite">Графит (Темная)</option>
             <option value="clinical">Клиническая (Светлая)</option>
+            <option value="amoled">AMOLED (Глубокий черный)</option>
           </select>
         </div>
-        <button onclick="app.testApiKey()" style="width:100%;">Проверить ключ</button>
-        <div id="apiKeyBadge"></div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button onclick="app.testApiKey()" id="btnTestKey">Проверить ключ</button>
+          <span id="apiKeyBadge"></span>
+        </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn-primary" onclick="app.saveSettings()" style="width:100%;">Сохранить</button>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="app.saveSettings()">Сохранить</button>
       </div>
     </div>
   </div>
 
-  <!-- Модалка: Шаблон -->
-  <div class="modal-overlay" id="modalTemplateEdit">
-    <div class="modal-card">
-      <div class="modal-head">
-        <span id="tplModalTitle">Шаблон</span>
-        <button onclick="app.closeModal('modalTemplateEdit')">✕</button>
+  <!-- Модальное окно: Мои шаблоны + СИНХРОНИЗАЦИЯ ПК ↔ ТЕЛЕФОН -->
+  <div class="modal-overlay" id="modalTemplates">
+    <div class="modal-card" style="max-width:760px;">
+      <div class="modal-header">
+        <span>Шаблоны исследований</span>
+        <button onclick="app.closeModal('modalTemplates')">✕</button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="editTplId">
-        <input type="text" id="editTplName" placeholder="Название исследования">
-        <textarea id="editTplContent" rows="8" placeholder="Текст нормы..."></textarea>
+
+        <!-- БЛОК СИНХРОНИЗАЦИИ ПК ↔ ТЕЛЕФОН -->
+        <div class="item-card" style="border:1px solid var(--primary); background:rgba(var(--primary-rgb), 0.05); gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:var(--primary); font-size:0.92em;">📲 Перенос шаблонов ПК ↔ Телефон:</strong>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button onclick="app.exportTemplatesJsonFile()" style="font-size:0.82em;">📤 Скачать файл .json</button>
+            <label class="btn" style="font-size:0.82em; cursor:pointer;">
+              📥 Загрузить файл .json
+              <input type="file" accept=".json" onchange="app.importTemplatesJsonFile(event)" style="display:none;">
+            </label>
+            <button onclick="app.copySyncCode()" style="font-size:0.82em;" class="btn-primary">📋 Скопировать код переноса</button>
+            <button onclick="app.pasteSyncCode()" style="font-size:0.82em;">📲 Вставить код на телефоне</button>
+          </div>
+          <small style="color:var(--text-muted); font-size:0.8em;">
+            Нажмите «Скопировать код», отправьте его в Избранное Telegram/WhatsApp, а на смартфоне нажмите «Вставить код» — и шаблоны обновятся.
+          </small>
+        </div>
+
+        <!-- Добавление/Редактирование шаблона -->
+        <div class="item-card">
+          <strong id="templateFormTitle">Создать шаблон</strong>
+          <input type="hidden" id="editTemplateId">
+          <input type="text" id="tplNameInput" placeholder="Название (например: КТ ОГК Норма)">
+          <textarea id="tplContentInput" rows="4" placeholder="Текст структуры нормы..."></textarea>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-primary" onclick="app.saveTemplateForm()">Сохранить шаблон</button>
+            <button onclick="app.resetTemplateForm()" id="btnCancelTplEdit" style="display:none;">Отмена</button>
+          </div>
+        </div>
+
+        <div id="templatesList" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn-primary" onclick="app.saveTemplate()">Сохранить</button>
+      <div class="modal-footer">
+        <button onclick="app.closeModal('modalTemplates')">Закрыть</button>
       </div>
     </div>
   </div>
 
-  <!-- Модалка: Правило -->
-  <div class="modal-overlay" id="modalPresetEdit">
+  <!-- Модальное окно: Мои правила -->
+  <div class="modal-overlay" id="modalPresets">
     <div class="modal-card">
-      <div class="modal-head">
-        <span>Правило стиля</span>
-        <button onclick="app.closeModal('modalPresetEdit')">✕</button>
+      <div class="modal-header">
+        <span>Мои глобальные правила и стиль</span>
+        <button onclick="app.closeModal('modalPresets')">✕</button>
       </div>
       <div class="modal-body">
-        <input type="text" id="newPresetTitle" placeholder="Заголовок">
-        <textarea id="newPresetRule" rows="4" placeholder="Текст правила..."></textarea>
+        <div class="item-card">
+          <input type="text" id="newPresetTitle" placeholder="Заголовок правила (например: Единицы измерения)">
+          <textarea id="newPresetRule" rows="2" placeholder="Описание (например: Все очаги указывать строго в мм)"></textarea>
+          <button class="btn-primary" onclick="app.addPreset()" style="align-self:flex-start;">+ Добавить правило</button>
+        </div>
+        <div id="presetsList" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn-primary" onclick="app.addPreset()">Добавить</button>
+      <div class="modal-footer">
+        <button onclick="app.closeModal('modalPresets')">Закрыть</button>
       </div>
     </div>
   </div>
 
   <script>
     const app = {
-      MODEL: 'gemini-3.5-flash',
       dirHandle: null,
-      showHighlights: true,
-      audioProgressInterval: null,
       progressInterval: null,
-
+      audioProgressInterval: null,
+      showHighlights: true,
+      activeMobilePanel: 'input',
+      
       state: {
-        settings: { apiKey: '', theme: 'graphite' },
+        settings: { 
+          apiKey: '', 
+          model: 'gemini-3.5-flash',
+          theme: 'graphite',
+          viewMode: 'auto'
+        },
         presets: [
           { id: 'p1', title: 'Единицы измерения', rule: 'Все размеры очагов, лимфоузлов и органов указывать строго в миллиметрах (мм).' },
           { id: 'p2', title: 'Стиль заключения', rule: 'В заключении выносить патологические изменения списком по степени клинической важности. Избегать формулировок "патологии не обнаружено", писать "Органических изменений не выявлено".' },
-          { id: 'p3', title: 'Только чистый текст', rule: 'Строго запрещено использовать синтаксис markdown: никаких звездочек **, заголовков #, нижних подчеркиваний. Использовать только заглавные буквы для разделов.' }
+          { id: 'p3', title: 'Только чистый текст', rule: 'СТРОГО ЗАПРЕЩЕНО использовать markdown-символы: никаких звездочек **, заголовков #, нижних подчеркиваний. Заголовки только ЗАГЛАВНЫМИ БУКВАМИ.' }
         ],
         templates: [
           {
@@ -708,30 +1003,180 @@
         history: []
       },
 
-      init() {
-        this.loadStorage();
+      async init() {
+        this.loadFromLocalStorage();
         this.applySettings();
         this.renderTemplatesSelect();
-        this.renderTemplatesList();
         this.renderPresets();
+        this.renderTemplatesList();
         this.renderHistory();
+
+        // Проверка ширины экрана
+        if (window.innerWidth <= 900) {
+          document.body.classList.add('view-mobile');
+          document.getElementById('btnDeviceMode').textContent = '🖥️ ПК вид';
+        }
       },
 
-      loadStorage() {
+      // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМА ПК / СМАРТФОН ---
+      toggleDeviceMode() {
+        const isMob = document.body.classList.toggle('view-mobile');
+        document.getElementById('btnDeviceMode').textContent = isMob ? '🖥️ ПК вид' : '📱 Мобильный вид';
+        if (isMob) {
+          this.switchMobilePanel(this.activeMobilePanel);
+        } else {
+          document.getElementById('panelInput').style.display = 'flex';
+          document.getElementById('panelOutput').style.display = 'flex';
+        }
+      },
+
+      switchMobilePanel(panel) {
+        this.activeMobilePanel = panel;
+        const btnIn = document.getElementById('mBtnInput');
+        const btnOut = document.getElementById('mBtnOutput');
+        const pIn = document.getElementById('panelInput');
+        const pOut = document.getElementById('panelOutput');
+
+        if (panel === 'input') {
+          btnIn.classList.add('active');
+          btnOut.classList.remove('active');
+          pIn.style.display = 'flex';
+          pOut.style.display = 'none';
+        } else {
+          btnOut.classList.add('active');
+          btnIn.classList.remove('active');
+          pIn.style.display = 'none';
+          pOut.style.display = 'flex';
+        }
+      },
+
+      // --- СИНХРОНИЗАЦИЯ ШАБЛОНОВ ПК ↔ ТЕЛЕФОН ---
+      exportTemplatesJsonFile() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.templates, null, 2));
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr);
+        a.setAttribute("download", "radiology_templates.json");
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      },
+
+      importTemplatesJsonFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (Array.isArray(imported)) {
+              this.state.templates = imported;
+              await this.writeFile('templates.json', this.state.templates);
+              this.renderTemplatesList();
+              this.renderTemplatesSelect();
+              alert('✓ Шаблоны успешно загружены из файла!');
+            } else {
+              alert('Неверный формат файла шаблонов.');
+            }
+          } catch(err) {
+            alert('Ошибка чтения файла: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      copySyncCode() {
+        const payload = JSON.stringify(this.state.templates);
+        const encoded = btoa(unescape(encodeURIComponent(payload)));
+        navigator.clipboard.writeText(encoded).then(() => {
+          alert('✓ Код шаблонов скопирован в буфер!\nОтправьте его себе в Telegram/WhatsApp, а на телефоне нажмите «Вставить код на телефоне».');
+        });
+      },
+
+      async pasteSyncCode() {
+        const code = prompt('Вставьте скопированный код переноса шаблонов:');
+        if (!code || !code.trim()) return;
         try {
-          const s = localStorage.getItem('rad_uni_settings');
-          if (s) this.state.settings = Object.assign(this.state.settings, JSON.parse(s));
-          const p = localStorage.getItem('rad_uni_presets');
-          if (p) this.state.presets = JSON.parse(p);
-          const t = localStorage.getItem('rad_uni_templates');
-          if (t) this.state.templates = JSON.parse(t);
-          const h = localStorage.getItem('rad_uni_history');
-          if (h) this.state.history = JSON.parse(h);
-        } catch(e) {}
+          const decoded = decodeURIComponent(escape(atob(code.trim())));
+          const templates = JSON.parse(decoded);
+          if (Array.isArray(templates) && templates.length > 0) {
+            this.state.templates = templates;
+            await this.writeFile('templates.json', this.state.templates);
+            this.renderTemplatesList();
+            this.renderTemplatesSelect();
+            alert(`✓ Успешно перенесено шаблонов: ${templates.length}!`);
+          } else {
+            alert('Не удалось распознать код.');
+          }
+        } catch(e) {
+          alert('Неверный код переноса: ' + e.message);
+        }
       },
 
-      saveStorage(k, data) {
-        localStorage.setItem(`rad_uni_${k}`, JSON.stringify(data));
+      // --- ПАПКА НА ПК (FILE SYSTEM API) ---
+      async connectDirectory() {
+        if (!('showDirectoryPicker' in window)) {
+          alert('File System Access API поддерживается на ПК в Chrome/Edge.');
+          return;
+        }
+        try {
+          this.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          document.getElementById('fsDot').classList.add('active');
+          document.getElementById('fsStatusText').textContent = `Папка: ${this.dirHandle.name}`;
+          await this.loadAllFilesFromDisk();
+          this.applySettings();
+          this.renderTemplatesSelect();
+          this.renderPresets();
+          this.renderTemplatesList();
+          this.renderHistory();
+        } catch (err) {
+          if (err.name !== 'AbortError') alert('Ошибка: ' + err.message);
+        }
+      },
+
+      async loadAllFilesFromDisk() {
+        if (!this.dirHandle) return;
+        this.state.settings = await this.readOrInitFile('settings.json', this.state.settings);
+        this.state.presets = await this.readOrInitFile('presets.json', this.state.presets);
+        this.state.templates = await this.readOrInitFile('templates.json', this.state.templates);
+        this.state.history = await this.readOrInitFile('history.json', this.state.history);
+      },
+
+      async readOrInitFile(fileName, defaultValue) {
+        try {
+          const fileHandle = await this.dirHandle.getFileHandle(fileName, { create: true });
+          const file = await fileHandle.getFile();
+          const text = await file.text();
+          if (!text.trim()) {
+            await this.writeFile(fileName, defaultValue);
+            return defaultValue;
+          }
+          return JSON.parse(text);
+        } catch (e) {
+          await this.writeFile(fileName, defaultValue);
+          return defaultValue;
+        }
+      },
+
+      async writeFile(fileName, data) {
+        localStorage.setItem(`rad_${fileName}`, JSON.stringify(data));
+        if (!this.dirHandle) return;
+        try {
+          const fileHandle = await this.dirHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(JSON.stringify(data, null, 2));
+          await writable.close();
+        } catch (e) {}
+      },
+
+      loadFromLocalStorage() {
+        const s = localStorage.getItem('rad_settings.json');
+        if (s) try { this.state.settings = Object.assign(this.state.settings, JSON.parse(s)); } catch(e){}
+        const p = localStorage.getItem('rad_presets.json');
+        if (p) try { this.state.presets = JSON.parse(p); } catch(e){}
+        const t = localStorage.getItem('rad_templates.json');
+        if (t) try { this.state.templates = JSON.parse(t); } catch(e){}
+        const h = localStorage.getItem('rad_history.json');
+        if (h) try { this.state.history = JSON.parse(h); } catch(e){}
       },
 
       applySettings() {
@@ -741,98 +1186,70 @@
         document.getElementById('inputApiKey').value = this.state.settings.apiKey || '';
       },
 
-      setTheme(v) {
-        this.state.settings.theme = v;
-        document.body.setAttribute('data-theme', v);
-        this.saveStorage('settings', this.state.settings);
+      setTheme(theme) {
+        this.state.settings.theme = theme;
+        document.body.setAttribute('data-theme', theme);
+        this.writeFile('settings.json', this.state.settings);
       },
 
-      saveSettings() {
+      toggleApiKeyVisibility() {
+        const input = document.getElementById('inputApiKey');
+        input.type = input.type === 'password' ? 'text' : 'password';
+      },
+
+      async saveSettings() {
         this.state.settings.apiKey = document.getElementById('inputApiKey').value.trim();
-        this.saveStorage('settings', this.state.settings);
+        this.state.settings.theme = document.getElementById('settingThemeSelect').value;
+        this.state.settings.model = 'gemini-3.5-flash';
+        await this.writeFile('settings.json', this.state.settings);
         this.closeModal('modalSettings');
       },
 
       async testApiKey() {
         const key = document.getElementById('inputApiKey').value.trim();
         const badge = document.getElementById('apiKeyBadge');
-        if (!key) { badge.innerHTML = '<span style="color:var(--danger)">Введите API ключ</span>'; return; }
-        badge.innerHTML = '<span class="loading-spin"></span> Проверка...';
-        try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-          if (res.ok) badge.innerHTML = '<span style="color:var(--success)">✓ Ключ валиден (Gemini 3.5 Flash активен)</span>';
-          else badge.innerHTML = `<span style="color:var(--danger)">Ошибка ключа</span>`;
-        } catch(e) { badge.innerHTML = `<span style="color:var(--danger)">Ошибка сети: ${e.message}</span>`; }
-      },
-
-      // --- СИНХРОНИЗАЦИЯ ПК ↔ ТЕЛЕФОН ---
-      exportSyncFile() {
-        const data = {
-          templates: this.state.templates,
-          presets: this.state.presets,
-          exportedAt: new Date().toISOString()
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `rad_templates_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-
-      importSyncFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (data.templates && Array.isArray(data.templates)) {
-              this.state.templates = data.templates;
-              this.saveStorage('templates', this.state.templates);
-            }
-            if (data.presets && Array.isArray(data.presets)) {
-              this.state.presets = data.presets;
-              this.saveStorage('presets', this.state.presets);
-            }
-            this.renderTemplatesSelect();
-            this.renderTemplatesList();
-            this.renderPresets();
-            alert('✓ Шаблоны и правила успешно импортированы!');
-            this.closeModal('modalSync');
-          } catch(err) {
-            alert('Ошибка чтения файла синхронизации: ' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      },
-
-      // --- ВЫБОР ПАПКИ НА ПК (File System API) ---
-      async connectFolder() {
-        if (!('showDirectoryPicker' in window)) return alert('Не поддерживается данным браузером');
-        try {
-          this.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-          document.getElementById('btnFolder').textContent = `📁 ${this.dirHandle.name}`;
-          alert(`Папка «${this.dirHandle.name}» подключена.`);
-        } catch(e){}
-      },
-
-      // --- ВЫЗОВ GEMINI 3.5 FLASH ---
-      async callGemini({ systemPrompt, userPrompt, temperature = 0.12 }) {
-        const apiKey = this.state.settings.apiKey;
-        if (!apiKey) {
-          this.openModal('modalSettings');
-          throw new Error('Укажите Gemini API ключ!');
+        if (!key) {
+          badge.textContent = 'Ключ не введен';
+          badge.style.color = 'var(--danger)';
+          return;
         }
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL}:generateContent?key=${apiKey}`, {
+        badge.innerHTML = '<span class="loading-spinner"></span> Проверка...';
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] })
+          });
+          if (res.ok) {
+            badge.textContent = '✓ Ключ валиден (Gemini 3.5 Flash доступен)';
+            badge.style.color = 'var(--success)';
+          } else {
+            const err = await res.json().catch(() => ({}));
+            badge.textContent = 'Ошибка: ' + (err.error?.message || res.status);
+            badge.style.color = 'var(--danger)';
+          }
+        } catch(e) {
+          badge.textContent = 'Ошибка сети: ' + e.message;
+          badge.style.color = 'var(--danger)';
+        }
+      },
+
+      // --- ВЫЗОВ GEMINI 3.5 FLASH (ЕДИНСТВЕННАЯ МОДЕЛЬ) ---
+      async callGemini({ systemPrompt, userPrompt, temperature = 0.1 }) {
+        const apiKey = this.state.settings.apiKey;
+        if (!apiKey) {
+          throw new Error('Укажите бесплатный Google Gemini API Key в Настройках!');
+        }
+
+        const model = 'gemini-3.5-flash';
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ parts: [{ text: userPrompt }] }],
-            generationConfig: { temperature, maxOutputTokens: 8192 }
+            generationConfig: { temperature: temperature, maxOutputTokens: 8192 }
           })
         });
 
@@ -840,22 +1257,81 @@
           const err = await res.json().catch(() => ({}));
           throw new Error(err.error?.message || `HTTP ${res.status}`);
         }
+
         const data = await res.json();
         return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       },
 
-      stripMarkdown(t) {
-        if (!t) return '';
-        return t.replace(/\*\*(.*?)\*\*/g, '$1')
-                .replace(/\*(.*?)\*/g, '$1')
-                .replace(/__(.*?)__/g, '$1')
-                .replace(/_(.*?)_/g, '$1')
-                .replace(/^#+\s+/gm, '')
-                .replace(/`{1,3}[^`]*`{1,3}/g, '')
-                .replace(/^[\*\-]\s+/gm, '• ');
+      stripMarkdown(text) {
+        if (!text) return '';
+        return text
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/\*(.*?)\*/g, '$1')
+          .replace(/__(.*?)__/g, '$1')
+          .replace(/_(.*?)_/g, '$1')
+          .replace(/^#+\s+/gm, '')
+          .replace(/`{1,3}[^`]*`{1,3}/g, '')
+          .replace(/^[\*\-]\s+/gm, '• ');
       },
 
-      // --- ДИКТОВКА (GEMINI 3.5 FLASH AUDIO) ---
+      setProgress(percent, text, isSpinner = true) {
+        const box = document.getElementById('genProgressBox');
+        const bar = document.getElementById('genProgressBar');
+        const txt = document.getElementById('genProgressText');
+        const val = document.getElementById('genProgressVal');
+
+        if (percent === null) {
+          box.style.display = 'none';
+          bar.style.width = '0%';
+          if (this.progressInterval) clearInterval(this.progressInterval);
+          return;
+        }
+
+        box.style.display = 'flex';
+        const p = Math.min(100, Math.max(0, Math.round(percent)));
+        bar.style.width = `${p}%`;
+        val.textContent = `${p}%`;
+        txt.innerHTML = `${isSpinner ? '<span class="loading-spinner"></span>' : ''} <span>${text}</span>`;
+      },
+
+      setAudioProgress(percent, text, isSpinner = true) {
+        const box = document.getElementById('audioProgressBox');
+        const bar = document.getElementById('audioProgressBar');
+        const txt = document.getElementById('audioProgressText');
+        const val = document.getElementById('audioProgressVal');
+
+        if (percent === null) {
+          box.style.display = 'none';
+          bar.style.width = '0%';
+          if (this.audioProgressInterval) clearInterval(this.audioProgressInterval);
+          return;
+        }
+
+        box.style.display = 'flex';
+        const p = Math.min(100, Math.max(0, Math.round(percent)));
+        bar.style.width = `${p}%`;
+        val.textContent = `${p}%`;
+        txt.innerHTML = `${isSpinner ? '<span class="loading-spinner"></span>' : ''} <span>${text}</span>`;
+      },
+
+      appendDictatedText(text) {
+        text = (text || '').trim();
+        if (!text) return;
+        text = text.charAt(0).toUpperCase() + text.slice(1);
+        const input = document.getElementById('rawInput');
+        const current = input.value.trim();
+
+        if (current.length > 0) {
+          input.value = current + '\n\n' + text;
+        } else {
+          input.value = text;
+        }
+        input.scrollTop = input.scrollHeight;
+      },
+
+      // =========================================================================
+      // МОДУЛЬ ГОЛОСОВОЙ ДИКТОВКИ ЧЕРЕЗ GEMINI 3.5 FLASH (ПРЯМАЯ РАСШИФРОВКА)
+      // =========================================================================
       speech: {
         mediaStream: null,
         mediaRecorder: null,
@@ -878,16 +1354,17 @@
             const fill = document.getElementById('soundMeterFill');
             document.getElementById('soundMeterBox').style.display = 'inline-flex';
 
-            const update = () => {
+            const updateMeter = () => {
               if (!this.isRecording) return;
               this.analyser.getByteFrequencyData(dataArray);
               let sum = 0;
               for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
               let avg = sum / dataArray.length;
-              fill.style.width = Math.min(100, Math.round((avg / 60) * 100)) + '%';
-              this.animFrameId = requestAnimationFrame(update);
+              let pct = Math.min(100, Math.round((avg / 64) * 100));
+              fill.style.width = pct + '%';
+              this.animFrameId = requestAnimationFrame(updateMeter);
             };
-            update();
+            updateMeter();
           } catch(e) {}
         },
 
@@ -901,23 +1378,32 @@
         },
 
         async start() {
+          const apiKey = app.state.settings.apiKey;
+          if (!apiKey) {
+            alert('Укажите Gemini API Key в Настройках!');
+            app.openModal('modalSettings');
+            return;
+          }
+
           this.audioChunks = [];
           try {
             this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          } catch(e) {
-            alert('Разрешите доступ к микрофону в браузере.');
+          } catch (err) {
+            alert('Разрешите доступ к микрофону в браузере: ' + err.message);
             return;
           }
 
           this.isRecording = true;
           try {
-            const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
-            this.mediaRecorder = mime ? new MediaRecorder(this.mediaStream, { mimeType: mime }) : new MediaRecorder(this.mediaStream);
+            const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? { mimeType: 'audio/webm;codecs=opus' } : {};
+            this.mediaRecorder = new MediaRecorder(this.mediaStream, options);
             this.mediaRecorder.ondataavailable = (e) => {
               if (e.data && e.data.size > 0) this.audioChunks.push(e.data);
             };
             this.mediaRecorder.start(250);
-          } catch(e) {}
+          } catch(e) {
+            console.warn(e);
+          }
 
           this.startSoundMeter();
           document.getElementById('btnVoiceStart').style.display = 'none';
@@ -932,67 +1418,83 @@
           document.getElementById('speechIndicator').style.display = 'none';
           this.stopSoundMeter();
 
+          app.setAudioProgress(25, 'Остановка записи...');
+
           if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            await new Promise(r => {
-              this.mediaRecorder.onstop = r;
-              try { this.mediaRecorder.stop(); } catch(e){ r(); }
+            await new Promise((resolve) => {
+              this.mediaRecorder.onstop = resolve;
+              try { this.mediaRecorder.stop(); } catch(e){ resolve(); }
             });
           }
-          if (this.mediaStream) this.mediaStream.getTracks().forEach(t => t.stop());
 
-          if (this.audioChunks.length === 0) return;
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(t => t.stop());
+          }
 
-          app.setAudioProgress(30, 'Сжатие звука...');
-          const apiKey = app.state.settings.apiKey;
-          if (!apiKey) {
+          if (this.audioChunks.length === 0) {
             app.setAudioProgress(null);
-            app.openModal('modalSettings');
+            alert('Звук не записался. Проверьте микрофон.');
             return;
           }
 
-          let p = 40;
+          app.setAudioProgress(50, 'Расшифровка через Gemini 3.5 Flash...');
+
+          let p = 55;
           app.audioProgressInterval = setInterval(() => {
-            if (p < 85) { p += 10; app.setAudioProgress(p, 'Расшифровка через Gemini 3.5 Flash...'); }
+            if (p < 90) {
+              p += 7;
+              app.setAudioProgress(p, 'Анализ терминов и размеров...');
+            }
           }, 180);
 
           try {
             const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
             const audioBlob = new Blob(this.audioChunks, { type: mimeType });
-            const base64Data = await new Promise((res, rej) => {
+
+            const base64Data = await new Promise((resolve, reject) => {
               const reader = new FileReader();
-              reader.onloadend = () => res(reader.result.split(',')[1]);
-              reader.onerror = rej;
+              reader.onloadend = () => resolve(reader.result.split(',')[1]);
+              reader.onerror = reject;
               reader.readAsDataURL(audioBlob);
             });
 
             const cleanMime = mimeType.split(';')[0] || 'audio/webm';
+            const payload = {
+              contents: [{
+                parts: [
+                  { text: "Вы — медицинский стенографист. Расшифруйте эту аудиозапись врача ДОСЛОВНО на русском языке. Точно сохраняйте медицинские термины, анатомические структуры, размеры и единицы измерения (мм, см, HU). Не добавляйте никаких вводных слов, пояснений и кавычек. Выведите ТОЛЬКО текст надиктованной речи." },
+                  { inlineData: { mimeType: cleanMime, data: base64Data } }
+                ]
+              }],
+              generationConfig: { temperature: 0.1 }
+            };
 
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${app.MODEL}:generateContent?key=${apiKey}`, {
+            const apiKey = app.state.settings.apiKey;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { text: "Вы — медицинский стенографист. Расшифруйте эту аудиозапись врача-рентгенолога ДОСЛОВНО на русском языке. Точно сохраняйте термины, структуры, размеры и единицы измерения (мм, см, HU). Выведите ТОЛЬКО текст надиктованной речи без вводных слов и кавычек." },
-                    { inlineData: { mimeType: cleanMime, data: base64Data } }
-                  ]
-                }],
-                generationConfig: { temperature: 0.1 }
-              })
+              body: JSON.stringify(payload)
             });
 
             if (app.audioProgressInterval) clearInterval(app.audioProgressInterval);
-            const data = await resp.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-            if (text.trim()) {
-              app.setAudioProgress(100, '✓ Готово!');
-              app.appendDictatedText(text);
-              setTimeout(() => app.setAudioProgress(null), 1200);
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.error?.message || `HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            const transcript = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+            if (transcript.trim()) {
+              app.setAudioProgress(100, '✓ Голос расшифрован!', false);
+              app.appendDictatedText(transcript);
+              setTimeout(() => app.setAudioProgress(null), 1500);
             } else {
               app.setAudioProgress(null);
-              alert('Не удалось разобрать речь.');
+              alert('Не удалось разобрать слова.');
             }
+
           } catch(e) {
             if (app.audioProgressInterval) clearInterval(app.audioProgressInterval);
             app.setAudioProgress(null);
@@ -1001,161 +1503,204 @@
         }
       },
 
-      setAudioProgress(pct, txt) {
-        const b = document.getElementById('audioProgressBox');
-        if (pct === null) { b.style.display = 'none'; return; }
-        b.style.display = 'flex';
-        document.getElementById('audioProgressBar').style.width = `${pct}%`;
-        document.getElementById('audioProgressVal').textContent = `${pct}%`;
-        document.getElementById('audioProgressText').innerHTML = `<span class="loading-spin"></span> ${txt}`;
-      },
-
-      setGenProgress(pct, txt) {
-        const b = document.getElementById('genProgressBox');
-        if (pct === null) { b.style.display = 'none'; return; }
-        b.style.display = 'flex';
-        document.getElementById('genProgressBar').style.width = `${pct}%`;
-        document.getElementById('genProgressVal').textContent = `${pct}%`;
-        document.getElementById('genProgressText').innerHTML = `<span class="loading-spin"></span> ${txt}`;
-      },
-
-      appendDictatedText(txt) {
-        txt = (txt || '').trim();
-        if (!txt) return;
-        txt = txt.charAt(0).toUpperCase() + txt.slice(1);
-        const inp = document.getElementById('rawInput');
-        inp.value = inp.value.trim() ? `${inp.value.trim()}\n\n${txt}` : txt;
-        inp.scrollTop = inp.scrollHeight;
-      },
-
+      // --- КЛИНИЧЕСКИЕ ВОПРОСЫ (GEMINI 3.5 FLASH) ---
       async askClarificationQuestions() {
-        const raw = document.getElementById('rawInput').value.trim();
-        const tpl = this.getSelectedTemplate();
-        if (!raw) return alert('Сначала надиктуйте или введите находки.');
+        const rawText = document.getElementById('rawInput').value.trim();
+        const tplId = document.getElementById('workTemplateSelect').value;
+        const tpl = this.state.templates.find(t => t.id === tplId);
+
+        if (!rawText) {
+          alert('Сначала введите или надиктуйте находки.');
+          return;
+        }
 
         const btn = document.getElementById('btnAskQuestions');
         btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spin"></span> Анализ...';
+        btn.innerHTML = '<span class="loading-spinner"></span> Проверка неясностей...';
 
-        const systemPrompt = `Вы — эксперт по лучевой диагностике.
-Проверьте находки рентгенолога:
+        const systemPrompt = `Вы — эксперт лучевой диагностики. Проверьте находки рентгенолога:
 1. Указана ли сторона (латерализация)?
 2. Указан ли размер очага?
-3. Понятно ли контрастирование (фаза)?
+3. Понятно ли контрастирование (фаза/накопление)?
+4. Нужны ли архивные данные?
+
 КРИТЕРИЙ:
 - Если данных достаточно, ответьте ТОЛЬКО: ВОПРОСОВ_НЕТ
-- Если есть важные клинические пробелы, выведите 2-3 коротких вопроса. Строго без markdown.`;
+- Если есть важные неясности, выведите 2-3 коротких вопроса. Строго без markdown.`;
+
+        const userPrompt = `ИССЛЕДОВАНИЕ: ${tpl ? tpl.name : 'КТ/МРТ'}\nНАХОДКИ:\n${rawText}`;
 
         try {
-          const resp = await this.callGemini({ systemPrompt, userPrompt: `ИССЛЕДОВАНИЕ: ${tpl.name}\nНАХОДКИ: ${raw}`, temperature: 0.1 });
-          const cleaned = resp.trim();
+          const response = await this.callGemini({ systemPrompt, userPrompt, temperature: 0.1 });
+          const cleaned = response.trim();
+
           if (cleaned.includes('ВОПРОСОВ_НЕТ') || cleaned.length < 5) {
-            document.getElementById('clarificationsBadge').style.display = 'none';
-            document.getElementById('clarificationsOkBadge').style.display = 'inline-flex';
-            document.getElementById('clarificationsQuestionsBox').innerHTML = '<span style="color:var(--success); font-weight:600;">✓ Данных достаточно, вопросов нет!</span>';
-            document.getElementById('clarificationsReplySection').style.display = 'none';
+            this.setClarificationsOk();
           } else {
-            document.getElementById('clarificationsOkBadge').style.display = 'none';
-            document.getElementById('clarificationsBadge').style.display = 'inline-flex';
-            const lines = cleaned.split('\n').filter(l => l.trim().length > 3);
-            let h = '<ul style="margin-left:18px;">';
-            lines.forEach(l => h += `<li>${this.stripMarkdown(l.replace(/^\d+[\.\)]\s*/, ''))}</li>`);
-            h += '</ul>';
-            document.getElementById('clarificationsQuestionsBox').innerHTML = h;
-            document.getElementById('clarificationsReplySection').style.display = 'flex';
+            const lines = cleaned.split('\n')
+              .map(l => l.replace(/^\d+[\.\)]\s*/, '').trim())
+              .filter(l => l.length > 3);
+            this.setClarificationsQuestions(lines);
           }
-          document.getElementById('clarificationsBody').style.display = 'flex';
-          document.getElementById('clarificationsArrow').textContent = '▲';
-        } catch(e) { alert(e.message); }
-        finally { btn.disabled = false; btn.innerHTML = '❓ Задать вопросы по находкам'; }
+        } catch (e) {
+          alert('Ошибка проверки: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '❓ Задать вопросы по находкам (Проверить неясности)';
+        }
+      },
+
+      setClarificationsOk() {
+        document.getElementById('clarificationsBadge').style.display = 'none';
+        document.getElementById('clarificationsOkBadge').style.display = 'inline-flex';
+        document.getElementById('clarificationsQuestionsBox').innerHTML = '<span style="color:var(--success); font-weight:600;">✓ Все ключевые данные указаны, вопросов нет!</span>';
+        document.getElementById('clarificationsReplySection').style.display = 'none';
+        document.getElementById('clarificationsBody').style.display = 'flex';
+        document.getElementById('clarificationsArrow').textContent = '▲';
+      },
+
+      setClarificationsQuestions(questionsList) {
+        document.getElementById('clarificationsOkBadge').style.display = 'none';
+        document.getElementById('clarificationsBadge').style.display = 'inline-flex';
+
+        let qHtml = '<div style="margin-bottom:6px; font-weight:600; color:var(--warning);">Уточните детали:</div><ul style="margin-left:16px;">';
+        questionsList.forEach(q => {
+          qHtml += `<li>${this.stripMarkdown(q)}</li>`;
+        });
+        qHtml += '</ul>';
+
+        document.getElementById('clarificationsQuestionsBox').innerHTML = qHtml;
+        document.getElementById('clarificationsReplySection').style.display = 'flex';
+        document.getElementById('clarificationsBody').style.display = 'flex';
+        document.getElementById('clarificationsArrow').textContent = '▲';
       },
 
       applyClarificationsAndContinue() {
-        const r = document.getElementById('clarificationsInput').value.trim();
-        if (!r) return;
-        this.appendDictatedText(`Уточнения: ${r}`);
+        const reply = document.getElementById('clarificationsInput').value.trim();
+        if (!reply) return alert('Введите ответ на вопрос.');
+        this.appendDictatedText(`Уточнения: ${reply}`);
         document.getElementById('clarificationsInput').value = '';
-        document.getElementById('clarificationsBadge').style.display = 'none';
-        document.getElementById('clarificationsOkBadge').style.display = 'inline-flex';
-        document.getElementById('clarificationsQuestionsBox').innerHTML = '<span style="color:var(--success);">✓ Ответы добавлены к находкам!</span>';
-        document.getElementById('clarificationsReplySection').style.display = 'none';
+        this.setClarificationsOk();
       },
 
       toggleClarifications() {
-        const b = document.getElementById('clarificationsBody');
-        const a = document.getElementById('clarificationsArrow');
-        if (b.style.display === 'none') { b.style.display = 'flex'; a.textContent = '▲'; }
-        else { b.style.display = 'none'; a.textContent = '▼'; }
+        const body = document.getElementById('clarificationsBody');
+        const arrow = document.getElementById('clarificationsArrow');
+        const isHidden = body.style.display === 'none';
+        body.style.display = isHidden ? 'flex' : 'none';
+        arrow.textContent = isHidden ? '▲' : '▼';
       },
 
-      async generateProtocol() {
-        const raw = document.getElementById('rawInput').value.trim();
-        const tpl = this.getSelectedTemplate();
-        const detail = document.getElementById('workDetailLevel').value;
+      // --- КЛИНИЧЕСКИЙ АССИСТЕНТ (GEMINI 3.5 FLASH) ---
+      async generateClinicalHints() {
+        const rawText = document.getElementById('rawInput').value.trim();
+        const tplId = document.getElementById('workTemplateSelect').value;
+        const tpl = this.state.templates.find(t => t.id === tplId);
 
-        const btn = document.getElementById('btnGenerate');
+        if (!rawText) return alert('Сначала надиктуйте находки.');
+
+        const container = document.getElementById('clinicalHintsContainer');
+        const btn = document.getElementById('btnHintsAction');
         btn.disabled = true;
-        btn.textContent = 'Генерация...';
+        btn.innerHTML = '<span class="loading-spinner"></span> Анализ...';
 
-        this.setGenProgress(20, 'Формирование структуры...');
-        const rules = this.state.presets.map((p, i) => `${i+1}. ${p.title}: ${p.rule}`).join('\n');
-        const detailText = detail === 'detailed' 
-          ? 'РЕЖИМ: МАКСИМАЛЬНО РАЗВЕРНУТЫЙ ЭКСПЕРТНЫЙ ПРОТОКОЛ. Подробно опишите все структуры нормы без пропусков, патологические очаги опишите с размерами в мм в 3 плоскостях.' 
-          : 'РЕЖИМ: КРАТКИЙ СФОКУСИРОВАННЫЙ ПРОТОКОЛ.';
+        const prompt = `Вы — эксперт по лучевой диагностике.
+Проанализируйте находки:
+ИССЛЕДОВАНИЕ: ${tpl ? tpl.name : 'КТ/МРТ'}
+НАХОДКИ: ${rawText}
 
-        const systemPrompt = `Вы — ведущий врач-рентгенолог (КТ/МРТ).
-Сформируйте медицинский протокол на основе шаблона нормы и находок врача.
-
-ПРАВИЛА ВРАЧА:
-${rules}
-
-${detailText}
-
-ТРЕБОВАНИЯ К ОФОРМЛЕНИЮ:
-1. СТРОГО БЕЗ СИНТАКСИСА MARKDOWN: никаких **, #, _, обратных кавычек. Разделы выделяйте ЗАГЛАВНЫМИ БУКВАМИ (например: ПЕЧЕНЬ:, ЗАКЛЮЧЕНИЕ:).
-2. ПОДСВЕТКА ИЗМЕНЕНИЙ: все формулировки, размеры и очаги, которые вы ВНЕСЛИ, ИЗМЕНИЛИ или ДОБАВИЛИ в шаблон нормы, обязательно оберните в теги <mark>...</mark>.
-Неизмененную норму шаблона оставляйте БЕЗ тегов.`;
-
-        let p = 30;
-        this.progressInterval = setInterval(() => {
-          if (p < 90) { p += 8; this.setGenProgress(p, 'Сборка заключения через Gemini 3.5 Flash...'); }
-        }, 200);
+Сформируйте клиническую справку (Шкалы Bosniak/LI-RADS/PI-RADS/ASPECTS, Диф. ряд, Зоны внимания).
+СТРОГО БЕЗ MARKDOWN (никаких звездочек ** и решеток #). Только чистый текст с заглавными буквами для разделов.`;
 
         try {
-          const resp = await this.callGemini({ 
-            systemPrompt, 
-            userPrompt: `ШАБЛОН НОРМЫ:\n${tpl.content}\n\nНАХОДКИ ВРАЧА:\n${raw || 'Органических изменений не выявлено.'}\n\nСформируйте протокол:` 
-          });
-          if (this.progressInterval) clearInterval(this.progressInterval);
-
-          let sanitized = this.stripMarkdown(resp).replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-          const out = document.getElementById('resultOutput');
-          out.innerHTML = sanitized;
-
-          this.setGenProgress(100, '✓ Протокол сформирован!');
-
-          this.state.history.unshift({
-            id: 'h_' + Date.now(),
-            date: new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }),
-            tplName: tpl.name,
-            raw,
-            text: out.innerText
-          });
-          if (this.state.history.length > 100) this.state.history.pop();
-          this.saveStorage('history', this.state.history);
-          this.renderHistory();
-
-          if (window.innerWidth < 900) {
-            document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth' });
-          }
-          setTimeout(() => this.setGenProgress(null), 2000);
-        } catch(e) {
-          if (this.progressInterval) clearInterval(this.progressInterval);
-          this.setGenProgress(null);
-          alert('Ошибка генерации: ' + e.message);
+          const res = await this.callGemini({ systemPrompt: 'Медицинский ассистент-радиолог.', userPrompt: prompt });
+          container.textContent = this.stripMarkdown(res);
+        } catch (e) {
+          container.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`;
         } finally {
           btn.disabled = false;
-          btn.textContent = '⚡ Сформировать протокол';
+          btn.textContent = '⚡ Анализ';
+        }
+      },
+
+      // --- ГЕНЕРАЦИЯ ПРОТОКОЛА (GEMINI 3.5 FLASH) ---
+      async generateProtocol() {
+        const rawText = document.getElementById('rawInput').value.trim();
+        const tplId = document.getElementById('workTemplateSelect').value;
+        const tpl = this.state.templates.find(t => t.id === tplId);
+        const detailLevel = document.getElementById('workDetailLevel').value;
+
+        const btn = document.getElementById('btnGenerate');
+        const btnText = document.getElementById('btnGenerateText');
+        btn.disabled = true;
+        btnText.textContent = 'Генерация протокола...';
+
+        this.setProgress(15, 'Интеграция находок в норму...');
+
+        const rulesList = this.state.presets.map((p, i) => `${i+1}. ${p.title}: ${p.rule}`).join('\n');
+
+        let detailInstruction = detailLevel === 'detailed'
+          ? 'РЕЖИМ: МАКСИМАЛЬНО РАЗВЕРНУТЫЙ ЭКСПЕРТНЫЙ ПРОТОКОЛ. Опишите все зоны подробно, размеры очагов в мм в 3 плоскостях.'
+          : 'РЕЖИМ: КРАТКИЙ СФОКУСИРОВАННЫЙ ПРОТОКОЛ.';
+
+        const systemPrompt = `Вы — ведущий эксперт по лучевой диагностике (КТ/МРТ).
+Сформируйте медицинский протокол на основе шаблона и находок врача.
+
+ПРАВИЛА ВРАЧА:
+${rulesList}
+
+${detailInstruction}
+
+ТРЕБОВАНИЯ К ВЫВОДУ:
+1. СТРОГО БЕЗ СИНТАКСИСА MARKDOWN: никаких **, #, _, обратных кавычек. Разделы выделяйте ЗАГЛАВНЫМИ БУКВАМИ (например: ПЕЧЕНЬ:, ЗАКЛЮЧЕНИЕ:).
+2. ПОДСВЕТКА ИЗМЕНЕНИЙ: все параметры, патологические очаги и формулировки, которые вы ВНЕСЛИ, ИЗМЕНИЛИ или ДОБАВИЛИ в шаблон нормы, обязательно оберните в теги <mark>...</mark>.
+Неизмененную норму оставляйте без тегов.`;
+
+        const userPrompt = `ШАБЛОН НОРМЫ:\n${tpl ? tpl.content : 'Норма'}\n\nНАХОДКИ ВРАЧА:\n${rawText || 'Органических изменений не выявлено.'}\n\nСформируйте протокол с тегами <mark>:`;
+
+        let currentProgress = 25;
+        this.progressInterval = setInterval(() => {
+          if (currentProgress < 90) {
+            currentProgress += 5;
+            this.setProgress(currentProgress, 'Составление протокола...');
+          }
+        }, 350);
+
+        try {
+          const rawResponse = await this.callGemini({ systemPrompt, userPrompt, temperature: 0.12 });
+          if (this.progressInterval) clearInterval(this.progressInterval);
+
+          let sanitized = this.stripMarkdown(rawResponse);
+          sanitized = sanitized.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+
+          const outputEl = document.getElementById('resultOutput');
+          outputEl.innerHTML = sanitized;
+
+          document.getElementById('diffIndicator').style.display = 'inline-block';
+          this.setProgress(100, '✓ Протокол сформирован!', false);
+
+          // На смартфоне автоматически переключаем экран на готовое заключение
+          if (document.body.classList.contains('view-mobile') || window.innerWidth <= 900) {
+            this.switchMobilePanel('output');
+          }
+
+          await this.saveToHistory({
+            id: 'h_' + Date.now(),
+            date: new Date().toLocaleString('ru-RU'),
+            templateName: tpl ? tpl.name : 'Без шаблона',
+            rawInput: rawText,
+            result: outputEl.innerText
+          });
+
+          setTimeout(() => this.setProgress(null), 2000);
+
+        } catch (err) {
+          if (this.progressInterval) clearInterval(this.progressInterval);
+          this.setProgress(null);
+          alert('Ошибка генерации: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btnText.textContent = 'Сформировать протокол';
         }
       },
 
@@ -1168,41 +1713,52 @@ ${detailText}
 
       copyOutput() {
         const out = document.getElementById('resultOutput');
-        const t = out.innerText.trim();
-        if (!t) return;
-        navigator.clipboard.writeText(t).then(() => {
-          const b = document.getElementById('btnCopy');
-          const old = b.textContent;
-          b.textContent = '✓ Скопировано';
-          setTimeout(() => b.textContent = old, 1500);
+        const text = out.innerText.trim();
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById('btnCopy');
+          const orig = btn.textContent;
+          btn.textContent = '✓ Скопировано!';
+          setTimeout(() => btn.textContent = orig, 1800);
         });
       },
 
       clearOutput() {
-        if (confirm('Очистить заключение?')) document.getElementById('resultOutput').innerHTML = '';
+        if (confirm('Очистить заключение?')) {
+          document.getElementById('resultOutput').innerHTML = '';
+          document.getElementById('diffIndicator').style.display = 'none';
+        }
       },
 
-      getSelectedTemplate() {
-        const id = document.getElementById('workTemplateSelect').value;
-        return this.state.templates.find(t => t.id === id) || { name: 'Протокол', content: 'Норма' };
+      // --- УПРАВЛЕНИЕ ШАБЛОНАМИ И ПРАВИЛАМИ ---
+      renderPresets() {
+        const container = document.getElementById('presetsList');
+        container.innerHTML = this.state.presets.map(p => `
+          <div class="item-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${p.title}</strong>
+              <button class="btn-danger" onclick="app.deletePreset('${p.id}')" style="padding:2px 6px;">✕</button>
+            </div>
+            <div style="font-size:0.85em; color:var(--text-muted);">${p.rule}</div>
+          </div>
+        `).join('');
       },
 
-      switchTab(tabId) {
-        document.querySelectorAll('.screen-tab').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.pc-tabs-bar button').forEach(el => el.classList.remove('btn-primary'));
+      async addPreset() {
+        const title = document.getElementById('newPresetTitle').value.trim();
+        const rule = document.getElementById('newPresetRule').value.trim();
+        if (!title || !rule) return alert('Заполните поля правила.');
+        this.state.presets.push({ id: 'p_' + Date.now(), title, rule });
+        document.getElementById('newPresetTitle').value = '';
+        document.getElementById('newPresetRule').value = '';
+        this.renderPresets();
+        await this.writeFile('presets.json', this.state.presets);
+      },
 
-        document.getElementById(tabId).classList.add('active');
-
-        // Мобильные кнопки
-        if (tabId === 'tabWork') document.getElementById('btnNavWork').classList.add('active');
-        if (tabId === 'tabHistory') document.getElementById('btnNavHistory').classList.add('active');
-        if (tabId === 'tabTemplates') document.getElementById('btnNavTemplates').classList.add('active');
-
-        // ПК кнопки
-        if (tabId === 'tabWork') document.getElementById('pcTabWork').classList.add('btn-primary');
-        if (tabId === 'tabHistory') document.getElementById('pcTabHistory').classList.add('btn-primary');
-        if (tabId === 'tabTemplates') document.getElementById('pcTabTemplates').classList.add('btn-primary');
+      async deletePreset(id) {
+        this.state.presets = this.state.presets.filter(p => p.id !== id);
+        this.renderPresets();
+        await this.writeFile('presets.json', this.state.presets);
       },
 
       renderTemplatesSelect() {
@@ -1211,135 +1767,144 @@ ${detailText}
       },
 
       renderTemplatesList() {
-        const c = document.getElementById('templatesListContainer');
-        c.innerHTML = this.state.templates.map(t => `
-          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-weight:600; font-size:0.9em;">${t.name}</div>
-            <div style="display:flex; gap:6px;">
-              <button onclick="app.editTemplate('${t.id}')" style="padding:4px 8px; font-size:0.8em;">Изм.</button>
-              <button class="btn-danger" onclick="app.deleteTemplate('${t.id}')" style="padding:4px 8px; font-size:0.8em;">✕</button>
+        const list = document.getElementById('templatesList');
+        list.innerHTML = this.state.templates.map(t => `
+          <div class="item-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${t.name}</strong>
+              <div style="display:flex; gap:4px;">
+                <button onclick="app.editTemplate('${t.id}')" style="padding:2px 8px;">Ред.</button>
+                <button class="btn-danger" onclick="app.deleteTemplate('${t.id}')" style="padding:2px 6px;">✕</button>
+              </div>
             </div>
+            <div style="font-size:0.82em; white-space:pre-wrap; max-height:60px; overflow:hidden; color:var(--text-muted);">${t.content}</div>
           </div>
         `).join('');
-      },
-
-      openNewTemplateForm() {
-        document.getElementById('editTplId').value = '';
-        document.getElementById('editTplName').value = '';
-        document.getElementById('editTplContent').value = '';
-        document.getElementById('tplModalTitle').textContent = 'Новый шаблон';
-        this.openModal('modalTemplateEdit');
       },
 
       editTemplate(id) {
-        const t = this.state.templates.find(x => x.id === id);
-        if (!t) return;
-        document.getElementById('editTplId').value = t.id;
-        document.getElementById('editTplName').value = t.name;
-        document.getElementById('editTplContent').value = t.content;
-        document.getElementById('tplModalTitle').textContent = 'Редактировать шаблон';
-        this.openModal('modalTemplateEdit');
+        const tpl = this.state.templates.find(t => t.id === id);
+        if (!tpl) return;
+        document.getElementById('editTemplateId').value = tpl.id;
+        document.getElementById('tplNameInput').value = tpl.name;
+        document.getElementById('tplContentInput').value = tpl.content;
+        document.getElementById('templateFormTitle').textContent = 'Редактировать шаблон';
+        document.getElementById('btnCancelTplEdit').style.display = 'inline-block';
       },
 
-      saveTemplate() {
-        const id = document.getElementById('editTplId').value;
-        const name = document.getElementById('editTplName').value.trim();
-        const content = document.getElementById('editTplContent').value.trim();
-        if (!name || !content) return alert('Заполните название и текст!');
+      resetTemplateForm() {
+        document.getElementById('editTemplateId').value = '';
+        document.getElementById('tplNameInput').value = '';
+        document.getElementById('tplContentInput').value = '';
+        document.getElementById('templateFormTitle').textContent = 'Создать шаблон';
+        document.getElementById('btnCancelTplEdit').style.display = 'none';
+      },
+
+      async saveTemplateForm() {
+        const id = document.getElementById('editTemplateId').value;
+        const name = document.getElementById('tplNameInput').value.trim();
+        const content = document.getElementById('tplContentInput').value.trim();
+        if (!name || !content) return alert('Заполните название и текст.');
 
         if (id) {
-          const t = this.state.templates.find(x => x.id === id);
-          if (t) { t.name = name; t.content = content; }
+          const tpl = this.state.templates.find(t => t.id === id);
+          if (tpl) { tpl.name = name; tpl.content = content; }
         } else {
           this.state.templates.push({ id: 't_' + Date.now(), name, content });
         }
-        this.saveStorage('templates', this.state.templates);
-        this.renderTemplatesSelect();
+
+        this.resetTemplateForm();
         this.renderTemplatesList();
-        this.closeModal('modalTemplateEdit');
-      },
-
-      deleteTemplate(id) {
-        if (!confirm('Удалить шаблон?')) return;
-        this.state.templates = this.state.templates.filter(x => x.id !== id);
-        this.saveStorage('templates', this.state.templates);
         this.renderTemplatesSelect();
+        await this.writeFile('templates.json', this.state.templates);
+      },
+
+      async deleteTemplate(id) {
+        if (!confirm('Удалить этот шаблон?')) return;
+        this.state.templates = this.state.templates.filter(t => t.id !== id);
         this.renderTemplatesList();
+        this.renderTemplatesSelect();
+        await this.writeFile('templates.json', this.state.templates);
       },
 
-      renderPresets() {
-        const c = document.getElementById('presetsListContainer');
-        c.innerHTML = this.state.presets.map(p => `
-          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-            <div>
-              <div style="font-weight:600; font-size:0.88em;">${p.title}</div>
-              <div style="font-size:0.78em; color:var(--text-muted); margin-top:2px;">${p.rule}</div>
-            </div>
-            <button class="btn-danger" onclick="app.deletePreset('${p.id}')" style="padding:2px 6px;">✕</button>
-          </div>
-        `).join('');
-      },
-
-      openNewPresetForm() {
-        document.getElementById('newPresetTitle').value = '';
-        document.getElementById('newPresetRule').value = '';
-        this.openModal('modalPresetEdit');
-      },
-
-      addPreset() {
-        const title = document.getElementById('newPresetTitle').value.trim();
-        const rule = document.getElementById('newPresetRule').value.trim();
-        if (!title || !rule) return alert('Заполните название и текст');
-        this.state.presets.push({ id: 'p_' + Date.now(), title, rule });
-        this.saveStorage('presets', this.state.presets);
-        this.renderPresets();
-        this.closeModal('modalPresetEdit');
-      },
-
-      deletePreset(id) {
-        this.state.presets = this.state.presets.filter(x => x.id !== id);
-        this.saveStorage('presets', this.state.presets);
-        this.renderPresets();
+      // --- АРХИВ ---
+      async saveToHistory(record) {
+        this.state.history.unshift(record);
+        if (this.state.history.length > 200) this.state.history.pop();
+        await this.writeFile('history.json', this.state.history);
+        this.renderHistory();
       },
 
       renderHistory() {
-        const f = (document.getElementById('historyFilter')?.value || '').toLowerCase();
-        const c = document.getElementById('historyListContainer');
-        const count = this.state.history.length;
-        document.getElementById('historyCount').textContent = count;
-        document.getElementById('pcHistCount').textContent = count;
+        const filter = (document.getElementById('historyFilter')?.value || '').toLowerCase();
+        const tbody = document.getElementById('historyTableBody');
+        document.getElementById('historyCount').textContent = this.state.history.length;
 
-        const list = this.state.history.filter(h => h.tplName.toLowerCase().includes(f) || h.text.toLowerCase().includes(f));
-        if (list.length === 0) {
-          c.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Архив пуст</div>';
+        const filtered = this.state.history.filter(h => 
+          h.templateName.toLowerCase().includes(filter) || 
+          h.result.toLowerCase().includes(filter) ||
+          h.date.includes(filter)
+        );
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:16px;">Нет записей</td></tr>`;
           return;
         }
 
-        c.innerHTML = list.map(h => `
-          <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--text-muted);">
-              <span>${h.date}</span>
-              <strong style="color:var(--primary);">${h.tplName}</strong>
-            </div>
-            <div style="font-size:0.82em; max-height:45px; overflow:hidden; text-overflow:ellipsis;">${h.text}</div>
-            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
-              <button onclick="app.loadFromHistory('${h.id}')" style="padding:4px 8px; font-size:0.75em;">Открыть</button>
-            </div>
-          </div>
+        tbody.innerHTML = filtered.map(h => `
+          <tr>
+            <td style="font-size:0.8em; color:var(--text-muted);">${h.date}</td>
+            <td><strong>${h.templateName}</strong></td>
+            <td><div style="font-size:0.82em; max-height:40px; overflow:hidden; text-overflow:ellipsis;">${h.result}</div></td>
+            <td style="text-align:right;">
+              <button onclick="app.loadFromHistory('${h.id}')" style="padding:2px 6px; font-size:0.8em;">Открыть</button>
+            </td>
+          </tr>
         `).join('');
       },
 
       loadFromHistory(id) {
         const item = this.state.history.find(h => h.id === id);
         if (!item) return;
-        document.getElementById('rawInput').value = item.raw || '';
-        document.getElementById('resultOutput').innerText = item.text;
-        this.switchTab('tabWork');
+        document.getElementById('rawInput').value = item.rawInput;
+        document.getElementById('resultOutput').innerText = item.result;
+        this.switchTab('work');
+        if (document.body.classList.contains('view-mobile') || window.innerWidth <= 900) {
+          this.switchMobilePanel('output');
+        }
       },
 
-      openModal(id) { document.getElementById(id).classList.add('open'); },
-      closeModal(id) { document.getElementById(id).classList.remove('open'); }
+      switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+
+        if (tab === 'work') {
+          document.getElementById('tabContentWork').classList.add('active');
+          const pc = document.getElementById('tabNavWork');
+          if (pc) pc.classList.add('active');
+          document.getElementById('bNavWork').classList.add('active');
+        } else {
+          document.getElementById('tabContentHistory').classList.add('active');
+          const pc = document.getElementById('tabNavHistory');
+          if (pc) pc.classList.add('active');
+          document.getElementById('bNavHistory').classList.add('active');
+          this.renderHistory();
+        }
+      },
+
+      openModal(id) {
+        document.getElementById(id).classList.add('open');
+      },
+
+      closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+      }
     };
+
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+    });
 
     window.addEventListener('DOMContentLoaded', () => app.init());
   </script>
